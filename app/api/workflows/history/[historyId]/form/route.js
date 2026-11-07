@@ -60,7 +60,7 @@ async function GET(
     }
 
     // Verify user has access to the workflow history's project
-    const accessCheck = await verifyWorkflowHistoryAccess(supabase, user.id, historyId);
+    const accessCheck = await verifyWorkflowHistoryAccess(admin, user.id, historyId);
     if (!accessCheck.hasAccess) {
       return NextResponse.json(
         {

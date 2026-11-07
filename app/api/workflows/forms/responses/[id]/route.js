@@ -52,7 +52,7 @@ async function GET(request, { params }) {
     }
 
     // Verify user has access to the form response (and its workflow if linked)
-    const accessCheck = await verifyFormResponseAccess(supabase, user.id, id);
+    const accessCheck = await verifyFormResponseAccess(admin, user.id, id);
     if (!accessCheck.hasAccess) {
       return NextResponse.json(
         {

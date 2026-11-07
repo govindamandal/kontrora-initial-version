@@ -88,15 +88,15 @@ async function GET(request, { params }) {
 
     const [nodesResult, usersResult] = await Promise.all([
       allNodeIds.length > 0
-        ? admin
+        ? supabase
             .from('workflow_nodes')
             .select(
-              'id, label, node_type, entity_id, settings, form_template_id, position_x, position_y',
+              'id, label, node_type, entity_id, config, position_x, position_y',
             )
             .in('id', allNodeIds)
         : { data: [] },
       allUserIds.length > 0
-        ? admin.from('user_profiles').select('id, name, email').in('id', allUserIds)
+        ? supabase.from('user_profiles').select('id, name, email').in('id', allUserIds)
         : { data: [] },
     ]);
 
