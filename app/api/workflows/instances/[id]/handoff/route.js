@@ -1,5 +1,5 @@
 const { NextRequest, NextResponse } = require('next/server');
-const { getUserFromRequest, createAdminSupabaseClient } = require('@/lib/supabase-server');
+const { getUserFromRequest, createAdminSupabaseClient, createApiSupabaseClient } = require('@/lib/supabase-server');
 const { hasPermission } = require('@/lib/rbac');
 const { Permission } = require('@/lib/permissions');
 const { handoffWorkflow } = require('@/lib/workflow-service');
@@ -16,6 +16,7 @@ async function POST(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const admin = createAdminSupabaseClient();
+    const supabase = createApiSupabaseClient(request);
     if (!admin) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
 
     // Get user profile with roles

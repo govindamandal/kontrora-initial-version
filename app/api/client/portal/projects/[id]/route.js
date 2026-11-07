@@ -51,7 +51,7 @@ async function GET(request, { params }) {
 
     // Fetch additional data in parallel using the authenticated client's supabase
     // (NOT createServerSupabase which may lack the client user's RLS context)
-    const db = supabase;
+    const db = admin;
 
     const [teamResult, updatesResult, workflowNodesResult, workflowHistoryResult] =
       await Promise.all([

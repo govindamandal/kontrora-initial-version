@@ -334,7 +334,7 @@ async function PATCH(
     logger.info('Role update request body', { action: 'updateRole', roleId, body });
 
     // Use roleManagementService to update the role
-    const updatedRole = await roleManagementService.updateRole(roleId, body);
+    const updatedRole = await roleManagementService.updateRole(roleId, body, createApiSupabaseClient(request));
 
     if (!updatedRole) {
       logger.error('Failed to update role', { action: 'updateRole', roleId });

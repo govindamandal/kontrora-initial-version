@@ -22,7 +22,7 @@ async function GET(request) {
       userProfile,
       Permission.EXECUTE_WORKFLOWS,
       undefined,
-      admin,
+      supabase,
     );
     if (!canExecute) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });

@@ -1,5 +1,5 @@
 const { NextRequest, NextResponse } = require('next/server');
-const { getUserFromRequest, createAdminSupabaseClient } = require('@/lib/supabase-server');
+const { getUserFromRequest, createAdminSupabaseClient, createApiSupabaseClient } = require('@/lib/supabase-server');
 const { clientApproveProject } = require('@/lib/client-portal-service');
 const { z } = require('zod');
 const { validateRequestBody } = require('@/lib/validation-schemas');
@@ -53,7 +53,7 @@ async function POST(request, { params }) {
       workflowInstanceId: validation.data.workflow_instance_id,
       clientUserId: user.id,
       notes: validation.data.notes || null,
-      supabaseClient: supabase,
+      supabaseClient: createApiSupabaseClient(request),
     });
 
     return NextResponse.json(

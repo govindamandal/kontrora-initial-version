@@ -23,7 +23,7 @@ async function POST(request) {
       userProfile,
       Permission.EXECUTE_WORKFLOWS,
       undefined,
-      admin,
+      supabase,
     );
     if (!canExecute) {
       return NextResponse.json(

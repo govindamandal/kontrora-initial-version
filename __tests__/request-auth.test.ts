@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ getUser: vi.fn(), cookieUser: vi.fn() }));
 vi.mock('@supabase/supabase-js', () => ({ createClient: () => ({ auth: { getUser: mocks.getUser } }) }));
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => ({ auth: { getUser: mocks.cookieUser } }) }));
 vi.mock('@/lib/debug-logger', () => ({ logger: { error: vi.fn() } }));
-import { getUserFromRequest } from '../lib/supabase-server';
+import { createApiSupabaseClient, getUserFromRequest } from '../lib/supabase-server';
 
 describe('API request authentication', () => {
   beforeEach(() => {
@@ -36,5 +36,19 @@ describe('API request authentication', () => {
   it('returns null for unauthenticated requests', async () => {
     mocks.cookieUser.mockResolvedValue({ data: { user: null }, error: { message: 'No session' } });
     expect(await getUserFromRequest(new NextRequest('http://localhost/api/projects'))).toBeNull();
+  });
+});
+
+
+describe('API database bearer context', () => {
+  it('verifies the supplied token when a route asks for the current user', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://localhost:54321');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY', 'test-key');
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'api-user' } }, error: null });
+    const client = createApiSupabaseClient(new NextRequest('http://localhost/api/workflows', {
+      headers: { authorization: 'Bearer api-token' },
+    }));
+    expect((await client!.auth.getUser()).data.user?.id).toBe('api-user');
+    expect(mocks.getUser).toHaveBeenCalledWith('api-token');
   });
 });

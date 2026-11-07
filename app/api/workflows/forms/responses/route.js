@@ -71,7 +71,7 @@ async function POST(request) {
     // If workflow_history_id is provided, verify user has access to that workflow
     if (validation.data.workflow_history_id) {
       const accessCheck = await verifyWorkflowHistoryAccess(
-        supabase,
+        admin,
         user.id,
         validation.data.workflow_history_id,
       );

@@ -1,5 +1,5 @@
  function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }const { NextRequest, NextResponse } = require('next/server');
-const { getUserFromRequest, createAdminSupabaseClient } = require('@/lib/supabase-server');
+const { getUserFromRequest, createAdminSupabaseClient, createApiSupabaseClient } = require('@/lib/supabase-server');
 const { hasPermission } = require('@/lib/rbac');
 const { Permission } = require('@/lib/permissions');
 const { sendClientInvitation } = require('@/lib/client-portal-service');
@@ -26,6 +26,7 @@ async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const admin = createAdminSupabaseClient();
+    const supabase = createApiSupabaseClient(request);
     if (!admin) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
 
     // Get user profile with roles

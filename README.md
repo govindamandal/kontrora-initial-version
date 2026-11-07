@@ -74,3 +74,27 @@ lib/          # Auth, RBAC, services, validation
 supabase/     # Schema, role seed, escrow SQL
 scripts/      # Seed and setup utilities
 ```
+
+
+## Production build and restored services
+
+`npm run build` compiles the application for deployment. The backend services for
+workflow templates, execution, client portal access, forms, and role updates are
+included in `lib/`. These were missing from the supplied initial version.
+
+Before using workflow start/handoff or client approval actions, apply
+`supabase/migrations/20261107_workflow_transactions.sql` in your Supabase SQL
+Editor. It adds transactional functions that lock workflow instances, validate
+project access and step assignment, and save history together with each state
+change. The functions use the signed-in user's identity and are unavailable to
+anonymous callers. They have been integration-tested on disposable PostgreSQL.
+
+The supplied schema supports sequential active steps. Conditional/parallel
+progression and inline form/branch assignment are rejected explicitly rather
+than guessed. Use explicit next-node handoffs for branching. Client approval
+nodes must have `config.client_approval = true`. Workflow features requiring the
+migration are unavailable until it is applied to the hosted database.
+
+The initial Next.js configuration already skips TypeScript build validation;
+a successful build is not evidence that all existing TypeScript issues or
+legacy features are resolved. Run `npm test` and `npm run lint` separately.

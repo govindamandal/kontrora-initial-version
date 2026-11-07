@@ -64,7 +64,7 @@ async function POST(request, { params }) {
       clientUserId: user.id,
       notes: validation.data.notes,
       issues: validation.data.issues || [],
-      supabaseClient: supabase,
+      supabaseClient: createApiSupabaseClient(request),
     });
 
     return NextResponse.json(

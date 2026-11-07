@@ -106,6 +106,19 @@ export const createApiSupabaseClient = (request: NextRequest) => {
   const supabaseUrl = getServerSupabaseUrl();
   const supabasePublishableKey = getSupabasePublishableKey();
 
+  // API fetches send bearer tokens; do not require a separate cookie session.
+  const bearer = request.headers.get('authorization')?.match(/^Bearer\s+(\S+)$/i);
+  if (bearer) {
+    const token = bearer[1];
+    const client = createClient(supabaseUrl!, supabasePublishableKey!, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const getUser = client.auth.getUser.bind(client.auth);
+    client.auth.getUser = (jwt?: string) => getUser(jwt || token);
+    return client;
+  }
+
   // Parse cookies from request header - this is the correct way for Route Handlers
   const cookieHeader = request.headers.get('cookie') || '';
   const parsedCookies: Record<string, string> = {};

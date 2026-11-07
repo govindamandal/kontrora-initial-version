@@ -39,7 +39,7 @@ async function POST(request) {
       userProfile,
       Permission.EXECUTE_WORKFLOWS,
       undefined,
-      admin,
+      supabase,
     );
     if (!canExecute) {
       return NextResponse.json(
@@ -49,7 +49,7 @@ async function POST(request) {
     }
 
     // Access check: user must have access to the project
-    const hasAccess = await userHasProjectAccess(userProfile, projectId, admin);
+    const hasAccess = await userHasProjectAccess(userProfile, projectId, supabase);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'You do not have access to this project' },
