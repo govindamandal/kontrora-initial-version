@@ -242,3 +242,21 @@ export async function getUserProfileFromRequest(
     user_roles: userRoles || [],
   };
 }
+
+/** Verify the browser API bearer token, or the SSR cookie session. */
+export async function getUserFromRequest(request: NextRequest) {
+  const authorization = request.headers.get('authorization');
+  if (authorization) {
+    const match = authorization.match(/^Bearer\s+(\S+)$/i);
+    if (!match || !isSupabaseConfigured()) return null;
+    const client = createClient(getServerSupabaseUrl()!, getSupabasePublishableKey()!, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await client.auth.getUser(match[1]);
+    return error ? null : data.user;
+  }
+  const client = createApiSupabaseClient(request);
+  if (!client) return null;
+  const { data, error } = await client.auth.getUser();
+  return error ? null : data.user;
+}

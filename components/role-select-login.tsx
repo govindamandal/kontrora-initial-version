@@ -142,7 +142,7 @@ export function RoleSelectLogin() {
         await waitForSessionReady();
         setMessage(`Signed in as ${opt.label}. Redirecting...`);
         const target = opt.redirectTo ?? safeRedirect;
-        window.location.href = target;
+        window.location.assign(target);
       }
     } catch (err: unknown) {
       const rawMessage = err instanceof Error ? err.message : 'Login failed';

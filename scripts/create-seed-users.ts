@@ -398,7 +398,7 @@ async function loadSeedData(supabase: SupabaseClient) {
         'Mid-market investment and wealth management firm undergoing a full digital transformation',
       service_tier: 'enterprise',
       account_manager_id: '11111111-1111-1111-1111-000000000003',
-      status: 'active',
+      status: 'in_progress',
     },
     {
       id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000002',
@@ -407,7 +407,7 @@ async function loadSeedData(supabase: SupabaseClient) {
         'Series B health-tech startup building patient engagement and telehealth software',
       service_tier: 'premium',
       account_manager_id: '11111111-1111-1111-1111-000000000003',
-      status: 'active',
+      status: 'in_progress',
     },
     {
       id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000003',
@@ -415,7 +415,7 @@ async function loadSeedData(supabase: SupabaseClient) {
       description: 'Family-owned artisan bakery chain with 6 locations expanding into e-commerce',
       service_tier: 'basic',
       account_manager_id: '11111111-1111-1111-1111-000000000004',
-      status: 'active',
+      status: 'in_progress',
     },
   ]);
 
@@ -469,7 +469,7 @@ async function loadSeedData(supabase: SupabaseClient) {
       description:
         'Full redesign of the investor-facing client portal — new information architecture, refreshed UI, and improved document access flows',
       account_id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000001',
-      status: 'active',
+      status: 'in_progress',
       priority: 'high',
       start_date: '2025-01-15',
       end_date: '2025-03-15',
@@ -497,7 +497,7 @@ async function loadSeedData(supabase: SupabaseClient) {
       description:
         'Cross-platform mobile app for appointment booking, secure messaging with care teams, and prescription refill requests',
       account_id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000002',
-      status: 'active',
+      status: 'in_progress',
       priority: 'urgent',
       start_date: '2025-01-10',
       end_date: '2025-02-28',
@@ -525,7 +525,7 @@ async function loadSeedData(supabase: SupabaseClient) {
       description:
         'Monthly content production and scheduling — 20 posts/month across Instagram and Facebook, plus monthly performance reporting',
       account_id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000003',
-      status: 'active',
+      status: 'in_progress',
       priority: 'low',
       start_date: '2025-01-01',
       end_date: '2025-12-31',
@@ -553,7 +553,7 @@ async function loadSeedData(supabase: SupabaseClient) {
       description:
         'Internal tool for tracking weekly KPIs across all active accounts — no workflow, managed directly by the team',
       account_id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000001',
-      status: 'active',
+      status: 'in_progress',
       priority: 'low',
       start_date: '2025-01-15',
       end_date: '2025-02-28',
@@ -1071,62 +1071,63 @@ async function loadSeedData(supabase: SupabaseClient) {
 
   // Workflow connections
   console.log('   Loading workflow connections...');
-  await supabase.from('workflow_connections').upsert([
+  const { error: connectionError } = await supabase.from('workflow_connections').upsert([
     {
+      id: 'cccc0000-0000-4000-8000-000000000001',
       workflow_template_id: '00000001-0002-0003-0004-000000000001',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000001',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000002',
-      label: 'Begin Design',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000002',
       workflow_template_id: '00000001-0002-0003-0004-000000000001',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000002',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000003',
-      label: 'Submit for Review',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000003',
       workflow_template_id: '00000001-0002-0003-0004-000000000001',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000003',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000004',
-      label: 'Approved',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000004',
       workflow_template_id: '00000001-0002-0003-0004-000000000001',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000004',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000005',
-      label: 'Build Complete',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000005',
       workflow_template_id: '00000001-0002-0003-0004-000000000002',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000006',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000007',
-      label: 'Brief Confirmed',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000006',
       workflow_template_id: '00000001-0002-0003-0004-000000000002',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000007',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000008',
-      label: 'Copy Ready',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000007',
       workflow_template_id: '00000001-0002-0003-0004-000000000002',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000008',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000009',
-      label: 'Client Approved',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000008',
       workflow_template_id: '00000001-0002-0003-0004-000000000002',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000009',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000010',
-      label: 'Assets Ready',
     },
     {
+      id: 'cccc0000-0000-4000-8000-000000000009',
       workflow_template_id: '00000001-0002-0003-0004-000000000002',
       from_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000010',
       to_node_id: 'aaaaaaaa-bbbb-cccc-dddd-000000000011',
-      label: 'Scheduled',
     },
   ]);
+  if (connectionError) throw connectionError;
 
   // Workflow instances (attach workflows to 5 of 6 projects - leave SEO Optimization without workflow)
   console.log('   Loading workflow instances...');

@@ -193,6 +193,7 @@ export default function ProjectCreationDialog({
           description: formData.description || null,
           accountId: formData.accountId,
           status: 'planning',
+          estimated_hours: Number(formData.estimatedHours),
           start_date: formData.startDate,
           end_date: formData.endDate,
         }),

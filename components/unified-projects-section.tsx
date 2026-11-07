@@ -197,12 +197,7 @@ export function UnifiedProjectsSection({ userProfile }: UnifiedProjectsSectionPr
     checkDeletePermission();
   }, [userProfile]);
 
-  // Load workflow inbox data
-  useEffect(() => {
-    loadInboxData();
-  }, []);
-
-  const loadInboxData = async () => {
+  async function loadInboxData() {
     try {
       setLoading(true);
 
@@ -245,7 +240,14 @@ export function UnifiedProjectsSection({ userProfile }: UnifiedProjectsSectionPr
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  // Load workflow inbox data
+  useEffect(() => {
+    loadInboxData();
+  }, []);
+
+
 
   // Handle project deletion
   const handleDeleteProject = async () => {

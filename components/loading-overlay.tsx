@@ -51,7 +51,8 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const loadingStartTime = useRef<number>(Date.now());
+  const [initialLoadingStartTime] = useState(() => Date.now());
+  const loadingStartTime = useRef<number>(initialLoadingStartTime);
   const pendingStop = useRef<boolean>(false);
   const pendingContentCount = useRef<number>(0);
   const contentReadyTimeout = useRef<NodeJS.Timeout | null>(null);

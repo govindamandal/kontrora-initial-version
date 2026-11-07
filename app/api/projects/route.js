@@ -81,7 +81,8 @@ async function POST(request) {
         status: validation.data.status || 'planning',
         start_date: validation.data.start_date,
         end_date: validation.data.end_date,
-        budget: validation.data.budget,
+        ...(validation.data.budget != null && { budget: validation.data.budget }),
+        estimated_hours: validation.data.estimated_hours,
         assigned_user_id: validation.data.assigned_user_id || user.id,
         created_by: user.id,
         created_at: new Date().toISOString(),
@@ -116,7 +117,6 @@ async function POST(request) {
       role_in_project: 'Project Creator',
       assigned_at: new Date().toISOString(),
       assigned_by: user.id,
-      source_type: 'creator',
     });
 
     if (assignmentError) {

@@ -140,3 +140,7 @@ performance-test.js
 .claude/
 .claude.json
 .codacy/
+
+# Local PostgreSQL credentials
+.env.kontrora.local
+.env.local.backup-*

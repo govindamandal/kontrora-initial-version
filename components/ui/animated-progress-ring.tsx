@@ -152,9 +152,6 @@ export function MultiProgressRing({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
 
-  // Calculate cumulative offsets
-  let cumulativeOffset = 0;
-
   return (
     <div className={cn('relative inline-flex items-center justify-center', className)}>
       <svg width={size} height={size} className="-rotate-90">
@@ -171,8 +168,8 @@ export function MultiProgressRing({
         {segments.map((segment, index) => {
           const percentage = (segment.value / max) * 100;
           const dashArray = (percentage / 100) * circumference;
-          const dashOffset = -(cumulativeOffset / 100) * circumference;
-          cumulativeOffset += percentage;
+          const precedingValue = segments.slice(0, index).reduce((sum, item) => sum + item.value, 0);
+          const dashOffset = -(precedingValue / max) * circumference;
 
           return (
             <motion.circle

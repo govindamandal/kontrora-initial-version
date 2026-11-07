@@ -46,6 +46,7 @@ export const createProjectSchema = z.object({
   status: z.enum(['planning', 'in_progress', 'review', 'complete', 'on_hold']).optional(),
   start_date: dateOnlySchema.optional().nullable(),
   end_date: dateOnlySchema.optional().nullable(),
+  estimated_hours: positiveNumberSchema.optional().nullable(),
   budget: positiveNumberSchema.optional().nullable(),
   assigned_user_id: uuidSchema.optional(),
 });

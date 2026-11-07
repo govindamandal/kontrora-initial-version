@@ -127,6 +127,29 @@ export default function TaskCreationDialog({
     }
   }, [initialStartDate]);
 
+  async function loadData() {
+    try {
+      const supabase = createClientSupabase() as any;
+      if (!supabase) return;
+
+      // Load workflows
+      const { data: workflowsData, error: workflowsError } = await supabase
+        .from('workflow_templates')
+        .select('id, name, description')
+        .eq('is_active', true)
+        .order('name');
+
+      if (!workflowsError) {
+        setWorkflows(workflowsData || []);
+      }
+
+      // Stakeholder auto-selection removed - workflow handles assignment
+    } catch {
+      // Error loading data
+    } finally {
+    }
+  }
+
   // Load data when dialog opens
   useEffect(() => {
     if (open) {
@@ -158,28 +181,7 @@ export default function TaskCreationDialog({
     }
   }, [open, editMode, existingProject]);
 
-  const loadData = async () => {
-    try {
-      const supabase = createClientSupabase() as any;
-      if (!supabase) return;
 
-      // Load workflows
-      const { data: workflowsData, error: workflowsError } = await supabase
-        .from('workflow_templates')
-        .select('id, name, description')
-        .eq('is_active', true)
-        .order('name');
-
-      if (!workflowsError) {
-        setWorkflows(workflowsData || []);
-      }
-
-      // Stakeholder auto-selection removed - workflow handles assignment
-    } catch {
-      // Error loading data
-    } finally {
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -70,7 +70,7 @@ export default function PendingUsersPage() {
     checkPermissions();
   }, [user, userProfile, loading, router]);
 
-  const loadPendingUsers = async () => {
+  async function loadPendingUsers() {
     try {
       setLoadingUsers(true);
       setError(null);
@@ -90,9 +90,9 @@ export default function PendingUsersPage() {
     } finally {
       setLoadingUsers(false);
     }
-  };
+  }
 
-  const loadStats = async () => {
+  async function loadStats() {
     try {
       const statsData = await userApprovalService.getApprovalStats();
       setStats(statsData);
@@ -104,7 +104,7 @@ export default function PendingUsersPage() {
     } catch (err: unknown) {
       logger.error('Error loading approval stats', { action: 'loadStats' }, err as Error);
     }
-  };
+  }
 
   const handleApproveUser = async (userId: string) => {
     if (!userProfile) return;
