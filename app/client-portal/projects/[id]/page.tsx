@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { AppLayout } from '@/components/app-layout';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { apiFetch } from '@/lib/api-config';
 import { Button } from '@/components/ui/button';
@@ -63,7 +62,7 @@ export default function ClientProjectPage() {
     }
   }
   return (
-    <AppLayout>
+    <>
       <main className="mx-auto w-full max-w-4xl space-y-6 p-4 md:p-8">
         <Link className="text-sm underline" href="/client-portal">
           Back to your projects
@@ -131,6 +130,6 @@ export default function ClientProjectPage() {
           </>
         )}
       </main>
-    </AppLayout>
+    </>
   );
 }

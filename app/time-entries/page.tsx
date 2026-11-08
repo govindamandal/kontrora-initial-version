@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AppLayout } from '@/components/app-layout';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { apiFetch } from '@/lib/api-config';
 import { Button } from '@/components/ui/button';
@@ -89,7 +88,7 @@ export default function TimeEntriesPage() {
     }
   }
   return (
-    <AppLayout>
+    <>
       <main className="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-8">
         <div>
           <h1 className="text-2xl font-semibold">Time Entries</h1>
@@ -204,6 +203,6 @@ export default function TimeEntriesPage() {
           )}
         </section>
       </main>
-    </AppLayout>
+    </>
   );
 }

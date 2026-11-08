@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AppLayout } from '@/components/app-layout';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { apiFetch } from '@/lib/api-config';
 
@@ -32,7 +31,7 @@ export default function ClientPortalPage() {
     };
   }, [user?.id]);
   return (
-    <AppLayout>
+    <>
       <main className="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-8">
         <div>
           <h1 className="text-2xl font-semibold">Client Portal</h1>
@@ -63,6 +62,6 @@ export default function ClientPortalPage() {
           </div>
         )}
       </main>
-    </AppLayout>
+    </>
   );
 }
