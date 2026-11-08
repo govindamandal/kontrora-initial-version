@@ -98,3 +98,28 @@ migration are unavailable until it is applied to the hosted database.
 The initial Next.js configuration already skips TypeScript build validation;
 a successful build is not evidence that all existing TypeScript issues or
 legacy features are resolved. Run `npm test` and `npm run lint` separately.
+
+
+## Feature verification and database compatibility
+
+Apply `supabase/migrations/20261108_feature_compatibility.sql` after the existing
+migrations. It adds the role ordering and task fields used by the original UI,
+accepts account lifecycle statuses without invalidating existing account rows,
+and prevents duplicate open clock sessions. Existing duplicate clock sessions
+cause the index creation to fail for review; no records are deleted automatically.
+
+The clock API now uses the supplied schema's `start_time` / `end_time` columns.
+Time-entry services receive the authenticated server client instead of returning
+empty results from a browser-only client. API linting enables `no-undef` to catch
+missing database variables. Client Portal and Time Entries routes are included.
+The demo seed associates `client@test.local` with the first sample account.
+
+Run `npm test`, `npm run lint`, `npm run build`, and optionally
+`python3 scripts/test-workflow-postgres.py` (requires local PostgreSQL admin access;
+it creates and removes an isolated temporary test database).
+
+The Estimates assessment and Q3–Q4 roadmap features are separate from these
+initial-platform repairs and are not implemented by this change. Email delivery,
+external billing/escrow transactions, and exhaustive permission/security auditing
+are outside the automated smoke checks; configure and verify those integrations
+before using real customer data.

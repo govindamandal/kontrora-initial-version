@@ -17,18 +17,18 @@ async function GET(request) {
     }
 
     // Permission check: requires VIEW_DEPARTMENTS, VIEW_ALL_DEPARTMENTS, or MANAGE_WORKFLOWS
-    const canView = await hasPermission(userProfile, Permission.VIEW_DEPARTMENTS, undefined, admin);
+    const canView = await hasPermission(userProfile, Permission.VIEW_DEPARTMENTS, undefined, supabase);
     const canViewAll = await hasPermission(
       userProfile,
       Permission.VIEW_ALL_DEPARTMENTS,
       undefined,
-      admin,
+      supabase,
     );
     const canManageWorkflows = await hasPermission(
       userProfile,
       Permission.MANAGE_WORKFLOWS,
       undefined,
-      admin,
+      supabase,
     );
 
     if (!canView && !canViewAll && !canManageWorkflows) {

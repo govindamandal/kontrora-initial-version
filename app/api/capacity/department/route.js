@@ -41,6 +41,9 @@ async function GET(request) {
     const { searchParams } = new URL(request.url);
     const departmentId = searchParams.get('departmentId');
     const period = (_nullishCoalesce(searchParams.get('period'), () => ( 'weekly'))) ;
+    if (!['daily', 'weekly', 'monthly', 'quarterly'].includes(period)) {
+      return NextResponse.json({ error: 'Invalid period' }, { status: 400 });
+    }
 
     if (!departmentId) {
       return NextResponse.json({ error: 'Department ID is required' }, { status: 400 });

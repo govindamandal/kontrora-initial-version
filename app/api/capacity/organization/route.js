@@ -43,13 +43,16 @@ async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const period = (_nullishCoalesce(searchParams.get('period'), () => ( 'weekly'))) ;
+    if (!['daily', 'weekly', 'monthly', 'quarterly'].includes(period)) {
+      return NextResponse.json({ error: 'Invalid period' }, { status: 400 });
+    }
 
     // Permission check: VIEW_ALL_CAPACITY required for organization-wide data
     const canViewAll = await hasPermission(
       userProfile,
       Permission.VIEW_ALL_CAPACITY,
       undefined,
-      admin,
+      supabase,
     );
     if (!canViewAll) {
       return NextResponse.json(

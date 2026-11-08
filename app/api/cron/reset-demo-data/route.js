@@ -58,7 +58,7 @@ async function GET(_request) {
   try {
     // Step 0: Remove legacy 'Leadership' department (renamed to 'Strategy')
     const removeLegacyDept = `DELETE FROM departments WHERE name = 'Leadership';`;
-    await admin.rpc('exec_sql', { query: removeLegacyDept });
+    await supabase.rpc('exec_sql', { query: removeLegacyDept });
 
     // Ensure all 7 departments exist
     const departmentsUpsert = `
@@ -73,7 +73,7 @@ async function GET(_request) {
       ON CONFLICT (name) DO UPDATE SET
         description = EXCLUDED.description;
     `;
-    const { error: deptError } = await admin.rpc('exec_sql', { query: departmentsUpsert });
+    const { error: deptError } = await supabase.rpc('exec_sql', { query: departmentsUpsert });
     if (deptError) logger.error('Departments upsert error', {}, deptError );
 
     // Get the Operations department ID (it may have been created with a different UUID)
@@ -95,7 +95,7 @@ async function GET(_request) {
         view_departments: true,
         view_newsletters: true,
       };
-      const { error: opsRoleError } = await admin.from('roles').upsert(
+      const { error: opsRoleError } = await supabase.from('roles').upsert(
         {
           name: 'Operations Coordinator',
           department_id: operationsDeptId,
@@ -133,12 +133,12 @@ async function GET(_request) {
     ];
 
     for (const query of clearQueries) {
-      const { error } = await admin.rpc('exec_sql', { query });
+      const { error } = await supabase.rpc('exec_sql', { query });
       if (error) logger.error('Clear error', {}, error );
     }
 
     // Step 2: Insert fresh projects with current dates
-    const { error: projectsError } = await admin.from('projects').upsert(
+    const { error: projectsError } = await supabase.from('projects').upsert(
       [
         {
           id: '11111111-2222-3333-4444-000000000001',
@@ -262,12 +262,12 @@ async function GET(_request) {
 
     // Step 3: Insert tasks
     const tasks = generateTasks();
-    const { error: tasksError } = await admin.from('tasks').upsert(tasks, { onConflict: 'id' });
+    const { error: tasksError } = await supabase.from('tasks').upsert(tasks, { onConflict: 'id' });
     if (tasksError) logger.error('Tasks error', {}, tasksError );
 
     // Step 4: Insert project assignments
     const assignments = generateAssignments();
-    const { error: assignmentsError } = await admin
+    const { error: assignmentsError } = await supabase
       .from('project_assignments')
       .upsert(assignments, { onConflict: 'id' });
     if (assignmentsError)
@@ -275,35 +275,35 @@ async function GET(_request) {
 
     // Step 5: Insert account members
     const members = generateAccountMembers();
-    const { error: membersError } = await admin
+    const { error: membersError } = await supabase
       .from('account_members')
       .upsert(members, { onConflict: 'id' });
     if (membersError) logger.error('Members error', {}, membersError );
 
     // Step 6: Insert time entries
     const timeEntries = generateTimeEntries();
-    const { error: timeError } = await admin
+    const { error: timeError } = await supabase
       .from('time_entries')
       .upsert(timeEntries, { onConflict: 'id' });
     if (timeError) logger.error('Time entries error', {}, timeError );
 
     // Step 7: Insert project updates
     const updates = generateProjectUpdates();
-    const { error: updatesError } = await admin
+    const { error: updatesError } = await supabase
       .from('project_updates')
       .upsert(updates, { onConflict: 'id' });
     if (updatesError) logger.error('Updates error', {}, updatesError );
 
     // Step 8: Insert milestones
     const milestones = generateMilestones();
-    const { error: milestonesError } = await admin
+    const { error: milestonesError } = await supabase
       .from('milestones')
       .upsert(milestones, { onConflict: 'id' });
     if (milestonesError) logger.error('Milestones error', {}, milestonesError );
 
     // Step 9: Insert user availability
     const availability = generateUserAvailability();
-    const { error: availabilityError } = await admin
+    const { error: availabilityError } = await supabase
       .from('user_availability')
       .upsert(availability, { onConflict: 'id' });
     if (availabilityError)
@@ -311,7 +311,7 @@ async function GET(_request) {
 
     // Step 10: Insert workflow templates
     const workflowTemplates = generateWorkflowTemplates();
-    const { error: templatesError } = await admin
+    const { error: templatesError } = await supabase
       .from('workflow_templates')
       .upsert(workflowTemplates, { onConflict: 'id' });
     if (templatesError)
@@ -319,14 +319,14 @@ async function GET(_request) {
 
     // Step 11: Insert workflow nodes
     const workflowNodes = generateWorkflowNodes();
-    const { error: nodesError } = await admin
+    const { error: nodesError } = await supabase
       .from('workflow_nodes')
       .upsert(workflowNodes, { onConflict: 'id' });
     if (nodesError) logger.error('Workflow nodes error', {}, nodesError );
 
     // Step 12: Insert workflow connections
     const workflowConnections = generateWorkflowConnections();
-    const { error: connectionsError } = await admin
+    const { error: connectionsError } = await supabase
       .from('workflow_connections')
       .upsert(workflowConnections, { onConflict: 'id' });
     if (connectionsError)
@@ -334,7 +334,7 @@ async function GET(_request) {
 
     // Step 13: Insert workflow instances
     const workflowInstances = generateWorkflowInstances();
-    const { error: instancesError } = await admin
+    const { error: instancesError } = await supabase
       .from('workflow_instances')
       .upsert(workflowInstances, { onConflict: 'id' });
     if (instancesError)
@@ -342,7 +342,7 @@ async function GET(_request) {
 
     // Step 14: Insert newsletters
     const newsletters = generateNewsletters();
-    const { error: newslettersError } = await admin
+    const { error: newslettersError } = await supabase
       .from('newsletters')
       .upsert(newsletters, { onConflict: 'id' });
     if (newslettersError)
@@ -350,14 +350,14 @@ async function GET(_request) {
 
     // Step 15: Insert project issues
     const projectIssues = generateProjectIssues();
-    const { error: issuesError } = await admin
+    const { error: issuesError } = await supabase
       .from('project_issues')
       .upsert(projectIssues, { onConflict: 'id' });
     if (issuesError) logger.error('Project issues error', {}, issuesError );
 
     // Step 16: Insert task week allocations
     const taskAllocations = generateTaskWeekAllocations();
-    const { error: allocationsError } = await admin
+    const { error: allocationsError } = await supabase
       .from('task_week_allocations')
       .upsert(taskAllocations, { onConflict: 'id' });
     if (allocationsError)
@@ -365,7 +365,7 @@ async function GET(_request) {
 
     // Step 17: Insert project stakeholders
     const stakeholders = generateProjectStakeholders();
-    const { error: stakeholdersError } = await admin
+    const { error: stakeholdersError } = await supabase
       .from('project_stakeholders')
       .upsert(stakeholders, { onConflict: 'id' });
     if (stakeholdersError)
@@ -379,7 +379,7 @@ async function GET(_request) {
         '{"manage_time": true, "edit_own_availability": true, "view_newsletters": true, "view_departments": true, "view_issues": true}'::jsonb
       WHERE name IN ('Executive Director', 'Account Manager', 'Project Manager', 'Senior Designer', 'Senior Developer', 'Junior Designer', 'Junior Developer', 'Admin');
     `;
-    const { error: permError } = await admin.rpc('exec_sql', { query: rolePermissionsUpdate });
+    const { error: permError } = await supabase.rpc('exec_sql', { query: rolePermissionsUpdate });
     if (permError) logger.error('Role permissions update error', {}, permError );
 
     // Step 19: Add leadership permissions (manage_issues for managers and above)
@@ -389,7 +389,7 @@ async function GET(_request) {
         '{"manage_issues": true}'::jsonb
       WHERE name IN ('Executive Director', 'Account Manager', 'Project Manager', 'Admin');
     `;
-    const { error: leadershipPermError } = await admin.rpc('exec_sql', {
+    const { error: leadershipPermError } = await supabase.rpc('exec_sql', {
       query: leadershipPermissionsUpdate,
     });
     if (leadershipPermError)
@@ -406,7 +406,7 @@ async function GET(_request) {
         '{"manage_departments": true, "manage_user_roles": true, "manage_workflows": true, "manage_accounts": true, "view_all_accounts": true, "view_all_projects": true, "manage_projects": true, "view_all_analytics": true, "view_all_capacity": true, "view_all_time_entries": true, "manage_all_workflows": true, "execute_any_workflow": true, "view_all_updates": true, "view_all_department_analytics": true, "view_all_account_analytics": true, "manage_users_in_accounts": true}'::jsonb
       WHERE name = 'Admin';
     `;
-    const { error: adminPermError } = await admin.rpc('exec_sql', {
+    const { error: adminPermError } = await supabase.rpc('exec_sql', {
       query: adminPermissionsUpdate,
     });
     if (adminPermError)

@@ -26,13 +26,13 @@ async function POST(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile with roles
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -55,7 +55,7 @@ async function POST(
     }
 
     // Check if project exists and is completed
-    const { data: project, error: projectError } = await admin
+    const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('id, status, account_id, created_by')
       .eq('id', projectId)
@@ -75,7 +75,7 @@ async function POST(
       userProfile,
       Permission.MANAGE_ALL_PROJECTS,
       undefined,
-      admin,
+      supabase,
     );
     const isProjectCreator = project.created_by === user.id;
 
@@ -89,7 +89,7 @@ async function POST(
     }
 
     // Reopen the project: set status back to in_progress
-    const { error: updateError } = await admin
+    const { error: updateError } = await supabase
       .from('projects')
       .update({
         status: 'in_progress',
@@ -103,7 +103,7 @@ async function POST(
     }
 
     // Reactivate ALL previously assigned team members (from before our fix)
-    const { error: reactivateError } = await admin
+    const { error: reactivateError } = await supabase
       .from('project_assignments')
       .update({ removed_at: null })
       .eq('project_id', projectId)

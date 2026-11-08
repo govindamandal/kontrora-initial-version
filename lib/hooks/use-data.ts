@@ -1,7 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-import { TimePeriod } from '@/components/capacity-trend-chart';
+export type TimePeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly';
 
 /**
  * Optimized data fetching hooks using SWR

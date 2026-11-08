@@ -62,13 +62,13 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     const hasAccountAnalytics = await checkPermissionHybrid(
       userProfile,
       Permission.VIEW_ALL_ACCOUNT_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     if (!hasAnalytics && !hasAccountAnalytics) {
       return NextResponse.json(
@@ -96,18 +96,18 @@ async function GET(request) {
       rolesData,
       userRolesData,
     ] = await Promise.all([
-      admin.from('user_profiles').select('id, name, email'),
-      admin.from('projects').select('id, name, status, account_id, estimated_hours'),
-      admin.from('accounts').select('id, name, status, service_tier'),
-      admin.from('departments').select('id, name'),
-      admin.from('project_assignments').select('id, project_id, user_id').is('removed_at', null),
-      admin.from('account_members').select('id, account_id, user_id'),
+      supabase.from('user_profiles').select('id, name, email'),
+      supabase.from('projects').select('id, name, status, account_id, estimated_hours'),
+      supabase.from('accounts').select('id, name, status, service_tier'),
+      supabase.from('departments').select('id, name'),
+      supabase.from('project_assignments').select('id, project_id, user_id').is('removed_at', null),
+      supabase.from('account_members').select('id, account_id, user_id'),
       supabase
         .from('time_entries')
         .select('user_id, project_id, hours_logged')
         .gte('entry_date', thirtyDaysAgo),
-      admin.from('roles').select('id, name, department_id'),
-      admin.from('user_roles').select('user_id, role_id'),
+      supabase.from('roles').select('id, name, department_id'),
+      supabase.from('user_roles').select('user_id, role_id'),
     ]);
 
     const users = usersData.data || [];

@@ -53,7 +53,7 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     if (!hasAnalytics) {
       return NextResponse.json(
@@ -76,8 +76,8 @@ async function GET(request) {
         .select('id, user_id, project_id, hours_logged, entry_date, created_at')
         .gte('entry_date', startStr)
         .lte('entry_date', endStr),
-      admin.from('projects').select('id, name'),
-      admin.from('user_profiles').select('id, name'),
+      supabase.from('projects').select('id, name'),
+      supabase.from('user_profiles').select('id, name'),
     ]);
 
     const timeEntries = timeEntriesData.data || [];

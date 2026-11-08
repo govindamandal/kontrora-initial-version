@@ -53,13 +53,13 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     const hasDeptAnalytics = await checkPermissionHybrid(
       userProfile,
       Permission.VIEW_ALL_DEPARTMENT_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     if (!hasAnalytics && !hasDeptAnalytics) {
       return NextResponse.json(
@@ -78,12 +78,12 @@ async function GET(request) {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
 
     // Fetch users first (workload_sentiment may not exist in older schemas)
-    let usersData = await admin
+    let usersData = await supabase
       .from('user_profiles')
       .select('id, name, email, workload_sentiment, created_at');
 
     if (usersData.error && (usersData.error ).code === '42703') {
-      const fallback = await admin.from('user_profiles').select('id, name, email, created_at');
+      const fallback = await supabase.from('user_profiles').select('id, name, email, created_at');
 
       usersData = {
         ...fallback,
@@ -114,9 +114,9 @@ async function GET(request) {
         .select('user_id, available_hours, week_start_date')
         .eq('week_start_date', format(weekStart, 'yyyy-MM-dd')),
       supabase.from('tasks').select('id, assigned_to, status').gte('created_at', startStr),
-      admin.from('departments').select('id, name'),
-      admin.from('roles').select('id, name, department_id'),
-      admin.from('user_roles').select('user_id, role_id'),
+      supabase.from('departments').select('id, name'),
+      supabase.from('roles').select('id, name, department_id'),
+      supabase.from('user_roles').select('user_id, role_id'),
     ]);
 
     const users = usersData.data || [];

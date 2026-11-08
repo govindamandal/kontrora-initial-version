@@ -134,9 +134,9 @@ export function AccountList({ accounts, userProfile, onAccountCreated }: Account
       {/* Accounts Grid - Responsive */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
         {filteredAccounts.map((account: any) => (
-          <Card key={account.id} className="h-full transition-shadow hover:shadow-lg">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-3">
+          <Card key={account.id} className="min-w-0 h-full transition-shadow hover:shadow-lg">
+            <CardHeader className="min-w-0 pb-3">
+              <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <CardTitle className="text-foreground truncate text-lg font-bold">
                     {account.name}

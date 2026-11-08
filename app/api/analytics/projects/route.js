@@ -53,13 +53,13 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     const hasProjectAccess = await checkPermissionHybrid(
       userProfile,
       Permission.VIEW_PROJECTS,
       undefined,
-      admin,
+      supabase,
     );
     if (!hasAllAnalytics && !hasProjectAccess) {
       return NextResponse.json(

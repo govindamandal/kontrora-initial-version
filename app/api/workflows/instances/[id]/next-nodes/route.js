@@ -57,7 +57,7 @@ async function GET(request, { params }) {
 
     // Verify user has access to the workflow instance's project
     const accessCheck = await verifyWorkflowInstanceAccess(supabase, user.id, id);
-    if (!accessCheck.hasAccess) {
+    if (!userProfile.is_superadmin && !accessCheck.hasAccess) {
       return NextResponse.json(
         {
           error: accessCheck.error || 'You do not have access to this workflow instance',

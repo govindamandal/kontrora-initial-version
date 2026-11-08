@@ -11,9 +11,19 @@ try:
  sql(Path('supabase/schema.sql').read_text())
  migration=Path('supabase/migrations/20261107_workflow_transactions.sql').read_text().replace('FROM PUBLIC, anon','FROM PUBLIC').replace('TO authenticated','TO CURRENT_USER')
  sql(migration)
+ sql(Path('supabase/migrations/20261108_feature_compatibility.sql').read_text())
  sql("""
  INSERT INTO auth.users(id,email) VALUES('11111111-1111-1111-1111-000000000001','workflow-check@test.local');
  UPDATE user_profiles SET is_superadmin=true;
+ DO $$ BEGIN
+   INSERT INTO clock_sessions(user_id,start_time) VALUES('11111111-1111-1111-1111-000000000001',now());
+   BEGIN
+     INSERT INTO clock_sessions(user_id,start_time) VALUES('11111111-1111-1111-1111-000000000001',now());
+     RAISE EXCEPTION 'Expected duplicate clock rejection';
+   EXCEPTION WHEN unique_violation THEN NULL; END;
+   UPDATE clock_sessions SET end_time=now() WHERE user_id='11111111-1111-1111-1111-000000000001' AND end_time IS NULL;
+ END $$;
+
  INSERT INTO accounts(id,name) VALUES('aaaaaaaa-aaaa-aaaa-aaaa-000000000001','Disposable integration fixture');
  INSERT INTO projects(id,name,account_id) VALUES('ffffffff-0001-0002-0003-000000000001','Disposable integration fixture','aaaaaaaa-aaaa-aaaa-aaaa-000000000001');
  INSERT INTO workflow_templates(id,name,is_active) VALUES('00000001-0002-0003-0004-000000000001','Integration fixture',true);

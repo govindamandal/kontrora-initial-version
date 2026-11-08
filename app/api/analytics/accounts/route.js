@@ -53,13 +53,13 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_ACCOUNT_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     const hasAllAnalytics = await checkPermissionHybrid(
       userProfile,
       Permission.VIEW_ALL_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     if (!hasAnalytics && !hasAllAnalytics) {
       return NextResponse.json(
@@ -77,14 +77,14 @@ async function GET(request) {
 
     // Fetch all data in parallel
     const [accountsData, projectsData, timeEntriesData, accountMembersData] = await Promise.all([
-      admin.from('accounts').select('id, name, status, created_at'),
-      admin.from('projects').select('id, name, account_id, status, estimated_hours, actual_hours'),
+      supabase.from('accounts').select('id, name, status, created_at'),
+      supabase.from('projects').select('id, name, account_id, status, estimated_hours, actual_hours'),
       supabase
         .from('time_entries')
         .select('project_id, hours_logged')
         .gte('entry_date', startStr)
         .lte('entry_date', endStr),
-      admin.from('account_members').select('account_id, user_id'),
+      supabase.from('account_members').select('account_id, user_id'),
     ]);
 
     const accounts = accountsData.data || [];

@@ -28,7 +28,7 @@ async function POST(request) {
       userProfile,
       Permission.MANAGE_USERS,
       undefined,
-      admin,
+      supabase,
     );
     if (!canManageUsers && !isSuperadmin(userProfile)) {
       return NextResponse.json(

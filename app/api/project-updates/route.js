@@ -37,7 +37,7 @@ async function GET(request) {
     const isSuperadmin = userProfile.is_superadmin;
     const hasViewAll =
       !isSuperadmin &&
-      (await hasPermission(userProfile, Permission.VIEW_ALL_PROJECTS, undefined, admin));
+      (await hasPermission(userProfile, Permission.VIEW_ALL_PROJECTS, undefined, supabase));
 
     // Build query
     let query = supabase.from('project_updates').select(`

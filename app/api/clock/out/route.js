@@ -80,7 +80,7 @@ async function POST(request) {
       .from('clock_sessions')
       .select('*')
       .eq('user_id', userProfile.id)
-      .eq('is_active', true)
+      .is('end_time', null)
       .single();
 
     if (sessionError || !session) {
@@ -91,7 +91,7 @@ async function POST(request) {
     }
 
     const clockOutTime = new Date();
-    const clockInTime = new Date(session.clock_in_time);
+    const clockInTime = new Date(session.start_time);
 
     // Calculate total hours clocked
     const totalMinutes = Math.round((clockOutTime.getTime() - clockInTime.getTime()) / (1000 * 60));
@@ -151,9 +151,8 @@ async function POST(request) {
     const { error: updateError } = await supabase
       .from('clock_sessions')
       .update({
-        is_active: false,
-        clock_out_time: clockOutTime.toISOString(),
-        notes: _nullishCoalesce(notes, () => ( null))
+        end_time: clockOutTime.toISOString(),
+        duration_minutes: totalMinutes
       })
       .eq('id', session.id);
 

@@ -14,7 +14,7 @@ async function DELETE(
     // Auth + permission check
     const user = await requireAuthentication(request);
     const supabase = createApiSupabaseClient(request);
-    await requirePermission(user, Permission.MANAGE_USER_ROLES, {}, admin);
+    await requirePermission(user, Permission.MANAGE_USER_ROLES, {}, supabase);
 
     // Use admin client to bypass RLS for invitation management
     const adminSupabase = createAdminSupabaseClient();

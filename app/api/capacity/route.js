@@ -60,13 +60,13 @@ async function GET(request) {
             userProfile,
             Permission.VIEW_TEAM_CAPACITY,
             undefined,
-            admin,
+            supabase,
           );
           const canViewAll = await hasPermission(
             userProfile,
             Permission.VIEW_ALL_CAPACITY,
             undefined,
-            admin,
+            supabase,
           );
 
           if (!canViewTeam && !canViewAll) {
@@ -77,7 +77,7 @@ async function GET(request) {
           }
         }
 
-        metrics = await capacityService.getUserCapacityMetrics(userId, weekStartDate, admin);
+        metrics = await capacityService.getUserCapacityMetrics(userId, weekStartDate, supabase);
         break;
       }
 
@@ -91,13 +91,13 @@ async function GET(request) {
           userProfile,
           Permission.VIEW_TEAM_CAPACITY,
           undefined,
-          admin,
+          supabase,
         );
         const canViewAll = await hasPermission(
           userProfile,
           Permission.VIEW_ALL_CAPACITY,
           undefined,
-          admin,
+          supabase,
         );
 
         if (!canViewTeam && !canViewAll) {
@@ -107,7 +107,7 @@ async function GET(request) {
           );
         }
 
-        metrics = await capacityService.getDepartmentCapacityMetrics(id, weekStartDate, admin);
+        metrics = await capacityService.getDepartmentCapacityMetrics(id, weekStartDate, supabase);
         break;
       }
 
@@ -121,7 +121,7 @@ async function GET(request) {
           userProfile,
           Permission.VIEW_PROJECTS,
           { projectId: id },
-          admin,
+          supabase,
         );
         if (!canView) {
           return NextResponse.json(
@@ -130,7 +130,7 @@ async function GET(request) {
           );
         }
 
-        metrics = await capacityService.getProjectCapacityMetrics(id, weekStartDate, admin);
+        metrics = await capacityService.getProjectCapacityMetrics(id, weekStartDate, supabase);
         break;
       }
 
@@ -140,7 +140,7 @@ async function GET(request) {
           userProfile,
           Permission.VIEW_ALL_CAPACITY,
           undefined,
-          admin,
+          supabase,
         );
         if (!canViewAll) {
           return NextResponse.json(
@@ -149,7 +149,7 @@ async function GET(request) {
           );
         }
 
-        metrics = await capacityService.getOrgCapacityMetrics(weekStartDate, admin);
+        metrics = await capacityService.getOrgCapacityMetrics(weekStartDate, supabase);
         break;
       }
 

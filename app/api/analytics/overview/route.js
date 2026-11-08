@@ -82,13 +82,13 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     const hasAccountAnalytics = await checkPermissionHybrid(
       userProfile,
       Permission.VIEW_ALL_ACCOUNT_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     if (!hasAnalytics && !hasAccountAnalytics) {
       return NextResponse.json(
@@ -115,19 +115,19 @@ async function GET(request) {
       availabilityData,
     ] = await Promise.all([
       // Projects
-      admin.from('projects').select('id, status, priority, end_date, created_at, updated_at'),
+      supabase.from('projects').select('id, status, priority, end_date, created_at, updated_at'),
 
       // Users
-      admin.from('user_profiles').select('id, created_at'),
+      supabase.from('user_profiles').select('id, created_at'),
 
       // Accounts
-      admin.from('accounts').select('id, status, service_tier'),
+      supabase.from('accounts').select('id, status, service_tier'),
 
       // Workflow instances
-      admin.from('workflow_instances').select('id, status, started_at, completed_at'),
+      supabase.from('workflow_instances').select('id, status, started_at, completed_at'),
 
       // Tasks
-      admin.from('tasks').select('id, status, due_date'),
+      supabase.from('tasks').select('id, status, due_date'),
 
       // Time entries this week
       supabase

@@ -1,5 +1,5 @@
  function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } }const { NextRequest, NextResponse } = require('next/server');
-const { createAdminSupabaseClient } = require('@/lib/supabase-server');
+const { createAdminSupabaseClient, createApiSupabaseClient } = require('@/lib/supabase-server');
 /**
  * GET /api/onboarding/tutorial-progress/check-action?action=create_department
  * Checks if a required tutorial action has been completed.
@@ -14,7 +14,7 @@ async function GET(request) {
   const {
     data: { user },
     error: authError,
-  } = await admin.auth.getUser();
+  } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

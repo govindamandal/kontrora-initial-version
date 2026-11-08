@@ -40,6 +40,9 @@ async function GET(request) {
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
     const period = (_nullishCoalesce(searchParams.get('period'), () => ( 'weekly'))) ;
+    if (!['daily', 'weekly', 'monthly', 'quarterly'].includes(period)) {
+      return NextResponse.json({ error: 'Invalid period' }, { status: 400 });
+    }
 
     if (!accountId) {
       return NextResponse.json({ error: 'Account ID is required' }, { status: 400 });
@@ -50,13 +53,13 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_TEAM_CAPACITY,
       undefined,
-      admin,
+      supabase,
     );
     const canViewAll = await hasPermission(
       userProfile,
       Permission.VIEW_ALL_CAPACITY,
       undefined,
-      admin,
+      supabase,
     );
 
     if (!canViewTeam && !canViewAll) {

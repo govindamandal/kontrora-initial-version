@@ -68,7 +68,7 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_PROJECTS,
       undefined,
-      admin,
+      supabase,
     );
 
     let projects = [];

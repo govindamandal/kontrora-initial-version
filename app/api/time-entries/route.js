@@ -1,3 +1,4 @@
+const { uuidSchema } = require('@/lib/validation-schemas');
  function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } }/**
  * API Route: Time Entries
  * Endpoints for logging and managing time on tasks
@@ -5,14 +6,15 @@
 const { NextRequest, NextResponse } = require('next/server');
 const { createApiSupabaseClient, getUserProfileFromRequest } = require('@/lib/supabase-server');
 const { timeEntryService } = require('@/lib/services/time-entry-service');
+const { userHasProjectAccess } = require('@/lib/rbac');
 const { hasPermission } = require('@/lib/permission-checker');
 const { Permission } = require('@/lib/permissions');
 const { checkDemoModeForDestructiveAction } = require('@/lib/api-demo-guard');
 const { logger } = require('@/lib/debug-logger');
 const { z } = require('zod');
 const createTimeEntrySchema = z.object({
-  taskId: z.string().uuid('Invalid task ID').optional().nullable(),
-  projectId: z.string().uuid('Invalid project ID'),
+  taskId: uuidSchema.optional().nullable(),
+  projectId: uuidSchema,
   hoursLogged: z.number().min(0.01).max(24),
   entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
   description: z.string().max(2000).optional().nullable(),
@@ -23,7 +25,7 @@ const createTimeEntrySchema = z.object({
 });
 
 const updateTimeEntrySchema = z.object({
-  entryId: z.string().uuid('Invalid entry ID'),
+  entryId: uuidSchema,
   hoursLogged: z.number().min(0.01).max(24).optional(),
   description: z.string().max(2000).optional().nullable(),
 });
@@ -59,14 +61,23 @@ async function GET(request) {
     const startDate = _nullishCoalesce(searchParams.get('startDate'), () => ( undefined));
     const endDate = _nullishCoalesce(searchParams.get('endDate'), () => ( undefined));
 
+    let accessProjectId = projectId;
+    if (taskId) {
+      const { data: task, error } = await supabase.from('tasks').select('project_id').eq('id', taskId).single();
+      if (error || !task) return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+      accessProjectId = task.project_id;
+    }
+    if (accessProjectId && !await userHasProjectAccess(userProfile, accessProjectId, supabase)) {
+      return NextResponse.json({ error: 'Project access denied' }, { status: 403 });
+    }
     let timeEntries = [];
 
     if (taskId) {
       // Get time entries for a specific task
-      timeEntries = await timeEntryService.getTaskTimeEntries(taskId);
+      timeEntries = await timeEntryService.getTaskTimeEntries(taskId, supabase);
     } else if (projectId) {
       // Get time entries for a project
-      timeEntries = await timeEntryService.getProjectTimeEntries(projectId);
+      timeEntries = await timeEntryService.getProjectTimeEntries(projectId, undefined, supabase);
     } else {
       // Get time entries for a user (default to current user)
       const targetUserId = _nullishCoalesce(userId, () => ( userProfile.id));
@@ -78,7 +89,7 @@ async function GET(request) {
           userProfile,
           Permission.VIEW_ALL_TIME_ENTRIES,
           undefined,
-          admin,
+          supabase,
         );
         if (!canViewTeam) {
           return NextResponse.json(
@@ -88,7 +99,7 @@ async function GET(request) {
         }
       }
 
-      timeEntries = await timeEntryService.getUserTimeEntries(targetUserId, startDate, endDate);
+      timeEntries = await timeEntryService.getUserTimeEntries(targetUserId, startDate, endDate, supabase);
     }
 
     return NextResponse.json({
@@ -136,9 +147,19 @@ async function POST(request) {
     const { taskId, projectId, hoursLogged, entryDate, description } = parsed.data;
 
     // Permission check: LOG_TIME
-    const canLogTime = await hasPermission(userProfile, Permission.MANAGE_TIME, undefined, admin);
+    const canLogTime = await hasPermission(userProfile, Permission.MANAGE_TIME, undefined, supabase);
     if (!canLogTime) {
       return NextResponse.json({ error: 'Insufficient permissions to log time' }, { status: 403 });
+    }
+
+    if (!await userHasProjectAccess(userProfile, projectId, supabase)) {
+      return NextResponse.json({ error: 'Project access denied' }, { status: 403 });
+    }
+    if (taskId) {
+      const { data: task } = await supabase.from('tasks').select('project_id').eq('id', taskId).single();
+      if (!task || task.project_id !== projectId) {
+        return NextResponse.json({ error: 'Task does not belong to this project' }, { status: 400 });
+      }
     }
 
     // Calculate week start date (Monday) using local time format
@@ -218,7 +239,7 @@ async function PATCH(request) {
     const entryDate = rawBody.entryDate;
 
     // Permission check: EDIT_OWN_TIME_ENTRIES
-    const canEdit = await hasPermission(userProfile, Permission.MANAGE_TIME, undefined, admin);
+    const canEdit = await hasPermission(userProfile, Permission.MANAGE_TIME, undefined, supabase);
     if (!canEdit) {
       return NextResponse.json(
         { error: 'Insufficient permissions to edit time entries' },
@@ -243,7 +264,7 @@ async function PATCH(request) {
         userProfile,
         Permission.VIEW_ALL_TIME_ENTRIES,
         undefined,
-        admin,
+        supabase,
       );
       if (!canManageAllTime) {
         return NextResponse.json({ error: 'Can only edit your own time entries' }, { status: 403 });
@@ -268,7 +289,7 @@ async function PATCH(request) {
       hours_logged: hoursLogged,
       entry_date: entryDate,
       description: _nullishCoalesce(description, () => ( undefined)),
-    });
+    }, supabase);
 
     if (!timeEntry) {
       return NextResponse.json({ error: 'Failed to update time entry' }, { status: 500 });
@@ -315,7 +336,7 @@ async function DELETE(request) {
     }
 
     // Permission check: EDIT_OWN_TIME_ENTRIES
-    const canEdit = await hasPermission(userProfile, Permission.MANAGE_TIME, undefined, admin);
+    const canEdit = await hasPermission(userProfile, Permission.MANAGE_TIME, undefined, supabase);
     if (!canEdit) {
       return NextResponse.json(
         { error: 'Insufficient permissions to delete time entries' },
@@ -340,7 +361,7 @@ async function DELETE(request) {
         userProfile,
         Permission.VIEW_ALL_TIME_ENTRIES,
         undefined,
-        admin,
+        supabase,
       );
       if (!canManageAllTime) {
         return NextResponse.json(
@@ -364,7 +385,7 @@ async function DELETE(request) {
       }
     }
 
-    const success = await timeEntryService.deleteTimeEntry(entryId);
+    const success = await timeEntryService.deleteTimeEntry(entryId, supabase);
 
     if (!success) {
       return NextResponse.json({ error: 'Failed to delete time entry' }, { status: 500 });

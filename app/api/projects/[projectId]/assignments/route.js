@@ -27,13 +27,13 @@ async function GET(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check project access
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -55,7 +55,7 @@ async function GET(
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
     }
 
-    const hasAccess = await userHasProjectAccess(userProfile, projectId, admin);
+    const hasAccess = await userHasProjectAccess(userProfile, projectId, supabase);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'You do not have access to this project' },
@@ -65,7 +65,7 @@ async function GET(
 
     // PARALLEL QUERY 1: Get assignments and workflow instance concurrently
     const [assignmentsResult, workflowResult] = await Promise.all([
-      admin
+      supabase
         .from('project_assignments')
         .select(
           `
@@ -88,7 +88,7 @@ async function GET(
         .eq('project_id', projectId)
         .is('removed_at', null)
         .order('assigned_at', { ascending: false }),
-      admin
+      supabase
         .from('workflow_instances')
         .select('id, status, workflow_template_id, started_snapshot')
         .eq('project_id', projectId)
@@ -112,19 +112,19 @@ async function GET(
     // PARALLEL QUERY 2: Get user roles, node assignments, and active steps concurrently
     const [userRolesResult, nodeAssignmentsResult, activeStepsResult] = await Promise.all([
       collaboratorUserIds.length > 0
-        ? admin
+        ? supabase
             .from('user_roles')
             .select(`user_id, roles (name)`)
             .in('user_id', collaboratorUserIds)
         : Promise.resolve({ data: [] }),
       workflowInstance
-        ? admin
+        ? supabase
             .from('workflow_node_assignments')
             .select('node_id, user_id')
             .eq('workflow_instance_id', workflowInstance.id)
         : Promise.resolve({ data: [] }),
       workflowInstance
-        ? admin
+        ? supabase
             .from('workflow_active_steps')
             .select('node_id, assigned_user_id, status')
             .eq('workflow_instance_id', workflowInstance.id)
@@ -214,8 +214,8 @@ async function GET(
 
     if (workflowOnlyUserIds.length > 0) {
       const [profilesResult, rolesResult] = await Promise.all([
-        admin.from('user_profiles').select('id, name, email, image').in('id', workflowOnlyUserIds),
-        admin.from('user_roles').select(`user_id, roles (name)`).in('user_id', workflowOnlyUserIds),
+        supabase.from('user_profiles').select('id, name, email, image').in('id', workflowOnlyUserIds),
+        supabase.from('user_roles').select(`user_id, roles (name)`).in('user_id', workflowOnlyUserIds),
       ]);
 
       missingUserProfiles = profilesResult.data || [];
@@ -329,13 +329,13 @@ async function POST(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile with roles
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -358,7 +358,7 @@ async function POST(
     }
 
     // Get project details
-    const { data: project, error: projectError } = await admin
+    const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('id, status, created_by')
       .eq('id', projectId)
@@ -382,7 +382,7 @@ async function POST(
       userProfile,
       Permission.MANAGE_ALL_PROJECTS,
       undefined,
-      admin,
+      supabase,
     );
     const isProjectCreator = project.created_by === user.id;
 
@@ -396,7 +396,7 @@ async function POST(
     }
 
     // Check if user is already assigned (including soft-deleted)
-    const { data: existingAssignment } = await admin
+    const { data: existingAssignment } = await supabase
       .from('project_assignments')
       .select('id, removed_at')
       .eq('project_id', projectId)
@@ -412,7 +412,7 @@ async function POST(
       }
 
       // Reactivate the existing assignment
-      const { error: updateError } = await admin
+      const { error: updateError } = await supabase
         .from('project_assignments')
         .update({
           removed_at: null,
@@ -427,7 +427,7 @@ async function POST(
       }
     } else {
       // Create new assignment
-      const { error: insertError } = await admin.from('project_assignments').insert({
+      const { error: insertError } = await supabase.from('project_assignments').insert({
         project_id: projectId,
         user_id: userId,
         role_in_project: roleInProject || 'member',
@@ -477,13 +477,13 @@ async function DELETE(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile with roles
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -506,7 +506,7 @@ async function DELETE(
     }
 
     // Get project details
-    const { data: project, error: projectError } = await admin
+    const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('id, status, created_by')
       .eq('id', projectId)
@@ -530,7 +530,7 @@ async function DELETE(
       userProfile,
       Permission.MANAGE_ALL_PROJECTS,
       undefined,
-      admin,
+      supabase,
     );
     const isProjectCreator = project.created_by === user.id;
 
@@ -544,7 +544,7 @@ async function DELETE(
     }
 
     // Soft delete the assignment
-    const { error: updateError } = await admin
+    const { error: updateError } = await supabase
       .from('project_assignments')
       .update({ removed_at: new Date().toISOString() })
       .eq('project_id', projectId)
@@ -557,14 +557,14 @@ async function DELETE(
     }
 
     // Also remove any workflow node assignments for this user in this project's workflows
-    const { data: workflowInstances } = await admin
+    const { data: workflowInstances } = await supabase
       .from('workflow_instances')
       .select('id')
       .eq('project_id', projectId);
 
     if (workflowInstances && workflowInstances.length > 0) {
       const instanceIds = workflowInstances.map((wi) => wi.id);
-      const { error: nodeAssignmentError } = await admin
+      const { error: nodeAssignmentError } = await supabase
         .from('workflow_node_assignments')
         .delete()
         .in('workflow_instance_id', instanceIds)

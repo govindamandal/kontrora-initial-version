@@ -1,3 +1,4 @@
+const { uuidSchema } = require('@/lib/validation-schemas');
  function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }const { NextRequest, NextResponse } = require('next/server');
 const { createApiSupabaseClient } = require('@/lib/supabase-server');
 const { userHasProjectAccess } = require('@/lib/rbac');
@@ -17,7 +18,7 @@ const updateTaskSchema = z
     estimated_hours: z.number().min(0).max(10000).optional().nullable(),
     actual_hours: z.number().min(0).max(10000).optional().nullable(),
     remaining_hours: z.number().min(0).max(10000).optional().nullable(),
-    assigned_to: z.string().uuid().optional().nullable(),
+    assigned_to: uuidSchema.optional().nullable(),
     display_order: z.number().min(0).optional(),
   })
   .refine(
@@ -35,7 +36,7 @@ async function getTaskProject(
   supabase,
   taskId,
 ) {
-  const { data: task } = await admin
+  const { data: task } = await supabase
     .from('tasks')
     .select('project_id, projects!inner(status)')
     .eq('id', taskId)
@@ -70,14 +71,14 @@ async function PUT(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -105,7 +106,7 @@ async function PUT(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    const hasAccess = await userHasProjectAccess(userProfile, taskProject.project_id, admin);
+    const hasAccess = await userHasProjectAccess(userProfile, taskProject.project_id, supabase);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'You do not have access to this project' },
@@ -163,7 +164,7 @@ async function PUT(
 
     // Use authenticated supabase client directly (not taskServiceDB which uses browser client)
     const { id, ...fieldsToUpdate } = updateData;
-    const { data: task, error: updateError } = await admin
+    const { data: task, error: updateError } = await supabase
       .from('tasks')
       .update({ ...fieldsToUpdate, updated_at: new Date().toISOString() })
       .eq('id', taskId)
@@ -219,14 +220,14 @@ async function PATCH(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -254,7 +255,7 @@ async function PATCH(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    const hasAccess = await userHasProjectAccess(userProfile, taskProject.project_id, admin);
+    const hasAccess = await userHasProjectAccess(userProfile, taskProject.project_id, supabase);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'You do not have access to this project' },
@@ -309,7 +310,7 @@ async function PATCH(
     }
 
     // Update the task directly with Supabase
-    const { data: task, error: updateError } = await admin
+    const { data: task, error: updateError } = await supabase
       .from('tasks')
       .update(updateFields)
       .eq('id', taskId)
@@ -395,14 +396,14 @@ async function DELETE(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -430,7 +431,7 @@ async function DELETE(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    const hasAccess = await userHasProjectAccess(userProfile, taskProject.project_id, admin);
+    const hasAccess = await userHasProjectAccess(userProfile, taskProject.project_id, supabase);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'You do not have access to this project' },
@@ -449,7 +450,7 @@ async function DELETE(
     }
 
     // Use authenticated supabase client directly (not taskServiceDB which uses browser client)
-    const { error: deleteError } = await admin.from('tasks').delete().eq('id', taskId);
+    const { error: deleteError } = await supabase.from('tasks').delete().eq('id', taskId);
 
     if (deleteError) {
       logger.error('Failed to delete task:', { taskId }, deleteError );

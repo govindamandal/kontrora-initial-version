@@ -19,7 +19,7 @@ async function GET(request) {
         id,
         name,
         department_id,
-        user_roles!user_id(count)
+        user_roles!role_id(count)
       `,
       )
       .order('name');

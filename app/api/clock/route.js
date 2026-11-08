@@ -35,7 +35,7 @@ async function GET(request) {
       .from('clock_sessions')
       .select('*')
       .eq('user_id', userProfile.id)
-      .eq('is_active', true)
+      .is('end_time', null)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -46,7 +46,7 @@ async function GET(request) {
 
     // Check for stale sessions (over 16 hours) and auto clock them out
     if (session) {
-      const clockInTime = new Date(session.clock_in_time);
+      const clockInTime = new Date(session.start_time);
       const now = new Date();
       const hoursElapsed = (now.getTime() - clockInTime.getTime()) / (1000 * 60 * 60);
 
@@ -55,9 +55,7 @@ async function GET(request) {
         await supabase
           .from('clock_sessions')
           .update({
-            is_active: false,
-            is_auto_clock_out: true,
-            clock_out_time: new Date(clockInTime.getTime() + 16 * 60 * 60 * 1000).toISOString(),
+            end_time: new Date(clockInTime.getTime() + 16 * 60 * 60 * 1000).toISOString(),
           })
           .eq('id', session.id);
 
@@ -73,7 +71,7 @@ async function GET(request) {
     return NextResponse.json({
       success: true,
       isClockedIn: !!session,
-      session: session || null,
+      session: session ? { ...session, clock_in_time: session.start_time, is_active: true } : null,
     });
   } catch (error) {
     const err = error ;
@@ -111,7 +109,7 @@ async function POST(request) {
       .from('clock_sessions')
       .select('id')
       .eq('user_id', userProfile.id)
-      .eq('is_active', true)
+      .is('end_time', null)
       .single();
 
     if (existingSession) {
@@ -126,8 +124,7 @@ async function POST(request) {
       .from('clock_sessions')
       .insert({
         user_id: userProfile.id,
-        clock_in_time: new Date().toISOString(),
-        is_active: true,
+        start_time: new Date().toISOString(),
       })
       .select()
       .single();

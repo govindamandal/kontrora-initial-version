@@ -60,6 +60,9 @@ async function GET(request) {
     const { searchParams } = new URL(request.url);
     const userId = _nullishCoalesce(searchParams.get('userId'), () => ( userProfile.id));
     const period = (_nullishCoalesce(searchParams.get('period'), () => ( 'weekly'))) ;
+    if (!['daily', 'weekly', 'monthly', 'quarterly'].includes(period)) {
+      return NextResponse.json({ error: 'Invalid period' }, { status: 400 });
+    }
 
     // Permission check: can view own data, or needs VIEW_TEAM_CAPACITY/VIEW_ALL_CAPACITY for others
     const isOwnData = userId === userProfile.id;
@@ -68,13 +71,13 @@ async function GET(request) {
         userProfile,
         Permission.VIEW_TEAM_CAPACITY,
         undefined,
-        admin,
+        supabase,
       );
       const canViewAll = await hasPermission(
         userProfile,
         Permission.VIEW_ALL_CAPACITY,
         undefined,
-        admin,
+        supabase,
       );
 
       if (!canViewTeam && !canViewAll) {

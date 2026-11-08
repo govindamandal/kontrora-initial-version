@@ -1,3 +1,4 @@
+const { uuidSchema } = require('@/lib/validation-schemas');
 const { NextRequest, NextResponse } = require('next/server');
 const { getUserFromRequest, createAdminSupabaseClient } = require('@/lib/supabase-server');
 const { hasPermission, isSuperadmin } = require('@/lib/rbac');
@@ -20,7 +21,7 @@ const updateProjectSchema = z
     end_date: z.string().optional().nullable(),
     estimated_hours: z.number().min(0).max(100000).optional().nullable(),
     budget: z.number().min(0).optional().nullable(),
-    assigned_user_id: z.string().uuid().optional().nullable(),
+    assigned_user_id: uuidSchema.optional().nullable(),
     notes: z.string().max(50000).optional().nullable(),
   })
   .refine(

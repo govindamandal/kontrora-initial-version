@@ -1,3 +1,4 @@
+const { uuidSchema } = require('@/lib/validation-schemas');
  function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } }/**
  * API Route: User Availability
  * Endpoints for managing weekly user work capacity
@@ -10,7 +11,7 @@ const { Permission } = require('@/lib/permissions');
 const { logger } = require('@/lib/debug-logger');
 const { z } = require('zod');
 const createAvailabilitySchema = z.object({
-  userId: z.string().uuid('Invalid user ID'),
+  userId: uuidSchema,
   weekStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
   availableHours: z.number().min(0).max(168),
   scheduleData: z.any().optional().nullable(),
@@ -53,13 +54,13 @@ async function GET(request) {
         userProfile,
         Permission.VIEW_TEAM_CAPACITY,
         undefined,
-        admin,
+        supabase,
       );
       const canViewAll = await hasPermission(
         userProfile,
         Permission.VIEW_ALL_CAPACITY,
         undefined,
-        admin,
+        supabase,
       );
 
       if (!canViewTeam && !canViewAll) {
@@ -73,7 +74,7 @@ async function GET(request) {
     const availability = await availabilityService.getUserAvailability(
       userId,
       weekStartDate,
-      admin,
+      supabase,
     );
 
     return NextResponse.json({
@@ -130,7 +131,7 @@ async function POST(request) {
       userProfile,
       Permission.EDIT_OWN_AVAILABILITY,
       undefined,
-      admin,
+      supabase,
     );
     if (!canEdit) {
       return NextResponse.json(
@@ -197,7 +198,7 @@ async function DELETE(request) {
       return NextResponse.json({ error: 'Can only delete your own availability' }, { status: 403 });
     }
 
-    const success = await availabilityService.deleteUserAvailability(userId, weekStartDate, admin);
+    const success = await availabilityService.deleteUserAvailability(userId, weekStartDate, supabase);
 
     if (!success) {
       return NextResponse.json({ error: 'Failed to delete availability' }, { status: 500 });

@@ -88,7 +88,7 @@ async function GET(request) {
         `
         project_id,
         user_id,
-        user_profiles(
+        user_profiles!project_assignments_user_id_fkey(
           id,
           name,
           email,

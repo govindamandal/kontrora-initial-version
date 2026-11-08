@@ -53,13 +53,13 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_ANALYTICS,
       undefined,
-      admin,
+      supabase,
     );
     const hasWorkflowManage = await checkPermissionHybrid(
       userProfile,
       Permission.MANAGE_WORKFLOWS,
       undefined,
-      admin,
+      supabase,
     );
     if (!hasAnalytics && !hasWorkflowManage) {
       return NextResponse.json(
@@ -76,15 +76,15 @@ async function GET(request) {
 
     // Fetch workflow data
     const [templatesData, instancesData, historyData, nodesData] = await Promise.all([
-      admin.from('workflow_templates').select('id, name, is_active'),
-      admin
+      supabase.from('workflow_templates').select('id, name, is_active'),
+      supabase
         .from('workflow_instances')
         .select('id, workflow_template_id, status, started_at, completed_at'),
       supabase
         .from('workflow_history')
         .select('id, workflow_instance_id, from_node_id, to_node_id, created_at')
         .gte('created_at', startStr),
-      admin.from('workflow_nodes').select('id, workflow_template_id, node_type, label'),
+      supabase.from('workflow_nodes').select('id, workflow_template_id, node_type, label'),
     ]);
 
     const templates = templatesData.data || [];

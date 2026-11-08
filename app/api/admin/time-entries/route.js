@@ -36,7 +36,7 @@ async function GET(request) {
       userProfile,
       Permission.VIEW_ALL_TIME_ENTRIES,
       undefined,
-      admin,
+      supabase,
     );
     if (!canViewTeam) {
       return NextResponse.json(

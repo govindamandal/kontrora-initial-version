@@ -1,5 +1,5 @@
  function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }const { NextRequest, NextResponse } = require('next/server');
-const { createAdminSupabaseClient } = require('@/lib/supabase-server');
+const { createAdminSupabaseClient, createApiSupabaseClient } = require('@/lib/supabase-server');
 const { SUPERADMIN_TUTORIAL } = require('@/lib/onboarding/tutorial-steps');
 /**
  * GET /api/onboarding/tutorial-progress
@@ -14,7 +14,7 @@ async function GET(request) {
   const {
     data: { user },
     error: authError,
-  } = await admin.auth.getUser();
+  } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -55,7 +55,7 @@ async function PATCH(request) {
   const {
     data: { user },
     error: authError,
-  } = await admin.auth.getUser();
+  } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

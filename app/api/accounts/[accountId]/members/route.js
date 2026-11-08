@@ -105,13 +105,13 @@ async function GET(
           user,
           Permission.VIEW_ALL_ACCOUNTS,
           undefined,
-          admin,
+          supabase,
         );
         const hasViewAccounts = await hasPermission(
           user,
           Permission.VIEW_ACCOUNTS,
           { accountId },
-          admin,
+          supabase,
         );
 
         logger.debug(`[GET /api/accounts/${accountId}/members] User permissions check`, {
@@ -138,7 +138,7 @@ async function GET(
         const hasServiceAccess = await accountService.canUserAccessAccount(
           user.id,
           accountId,
-          admin,
+          supabase,
         );
         logger.debug(`[GET /api/accounts/${accountId}/members] Service-level access check`, {
           hasServiceAccess,

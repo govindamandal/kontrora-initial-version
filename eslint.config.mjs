@@ -54,6 +54,10 @@ const eslintConfig = [
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
+  {
+    files: ['app/api/**/*.js', 'lib/services/**/*.js'],
+    rules: { 'no-undef': 'error' },
+  },
 ];
 
 export default eslintConfig;

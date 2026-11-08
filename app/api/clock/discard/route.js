@@ -32,7 +32,7 @@ async function POST(request) {
       .from('clock_sessions')
       .select('*')
       .eq('user_id', userProfile.id)
-      .eq('is_active', true)
+      .is('end_time', null)
       .single();
 
     if (sessionError || !session) {
@@ -45,9 +45,8 @@ async function POST(request) {
     const { error: updateError } = await supabase
       .from('clock_sessions')
       .update({
-        is_active: false,
-        clock_out_time: clockOutTime.toISOString(),
-        notes: 'Discarded - no time logged',
+        end_time: clockOutTime.toISOString(),
+        duration_minutes: Math.max(0, Math.round((clockOutTime.getTime() - new Date(session.start_time).getTime()) / 60000)),
       })
       .eq('id', session.id);
 

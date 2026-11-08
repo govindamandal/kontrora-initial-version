@@ -1,3 +1,4 @@
+const { uuidSchema } = require('@/lib/validation-schemas');
  function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }const { NextRequest, NextResponse } = require('next/server');
 const { createApiSupabaseClient } = require('@/lib/supabase-server');
 const { userHasProjectAccess } = require('@/lib/rbac');
@@ -7,13 +8,13 @@ const createTaskSchema = z
   .object({
     name: z.string().min(1, 'Task name is required').max(500),
     description: z.string().max(5000).optional().nullable(),
-    project_id: z.string().uuid('Invalid project ID'),
+    project_id: uuidSchema,
     status: z.enum(['backlog', 'todo', 'in_progress', 'review', 'done', 'blocked']).optional(),
     priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
     start_date: z.string().optional().nullable(),
     due_date: z.string().optional().nullable(),
     estimated_hours: z.number().min(0).max(10000).optional().nullable(),
-    assigned_to: z.string().uuid('Invalid assignee ID').optional().nullable(),
+    assigned_to: uuidSchema.optional().nullable(),
   })
   .refine(
     (data) => {
@@ -37,14 +38,14 @@ async function POST(request) {
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -83,7 +84,7 @@ async function POST(request) {
 
     // Task permissions are inherited from project access
     {
-      const hasAccess = await userHasProjectAccess(userProfile, body.project_id, admin);
+      const hasAccess = await userHasProjectAccess(userProfile, body.project_id, supabase);
       if (!hasAccess) {
         return NextResponse.json(
           { error: 'You do not have access to this project' },
@@ -92,7 +93,7 @@ async function POST(request) {
       }
 
       // Check if project is completed (read-only mode)
-      const { data: project } = await admin
+      const { data: project } = await supabase
         .from('projects')
         .select('status')
         .eq('id', body.project_id)
@@ -124,7 +125,7 @@ async function POST(request) {
       assigned_to: body.assigned_to || null,
     };
 
-    const { data: task, error: taskError } = await admin
+    const { data: task, error: taskError } = await supabase
       .from('tasks')
       .insert(taskInsert)
       .select(
@@ -144,7 +145,7 @@ async function POST(request) {
 
     // Add user as project collaborator if not already assigned
     if (body.project_id) {
-      const { data: existingAssignment } = await admin
+      const { data: existingAssignment } = await supabase
         .from('project_assignments')
         .select('id, removed_at')
         .eq('project_id', body.project_id)
@@ -153,7 +154,7 @@ async function POST(request) {
 
       if (!existingAssignment) {
         // Insert new assignment
-        await admin.from('project_assignments').insert({
+        await supabase.from('project_assignments').insert({
           project_id: body.project_id,
           user_id: user.id,
           role_in_project: 'collaborator',
@@ -161,7 +162,7 @@ async function POST(request) {
         });
       } else if (existingAssignment.removed_at) {
         // Reactivate removed assignment
-        await admin
+        await supabase
           .from('project_assignments')
           .update({ removed_at: null, role_in_project: 'collaborator' })
           .eq('id', existingAssignment.id);

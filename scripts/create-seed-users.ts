@@ -307,6 +307,12 @@ async function createSeedUsers() {
   // Step 5: Load user-dependent seed data
   console.log('\n📦 Step 5: Loading seed data...');
   await loadSeedData(supabase);
+  const { error: clientProfileError } = await supabase.from('user_profiles').update({
+    is_client: true,
+    client_account_id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000001',
+  }).eq('id', '11111111-1111-1111-1111-000000000008');
+  if (clientProfileError) throw clientProfileError;
+
 
   // Summary
   console.log('\n' + '='.repeat(60));
@@ -398,7 +404,7 @@ async function loadSeedData(supabase: SupabaseClient) {
         'Mid-market investment and wealth management firm undergoing a full digital transformation',
       service_tier: 'enterprise',
       account_manager_id: '11111111-1111-1111-1111-000000000003',
-      status: 'in_progress',
+      status: 'active',
     },
     {
       id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000002',
@@ -407,7 +413,7 @@ async function loadSeedData(supabase: SupabaseClient) {
         'Series B health-tech startup building patient engagement and telehealth software',
       service_tier: 'premium',
       account_manager_id: '11111111-1111-1111-1111-000000000003',
-      status: 'in_progress',
+      status: 'active',
     },
     {
       id: 'aaaaaaaa-aaaa-aaaa-aaaa-000000000003',
@@ -415,7 +421,7 @@ async function loadSeedData(supabase: SupabaseClient) {
       description: 'Family-owned artisan bakery chain with 6 locations expanding into e-commerce',
       service_tier: 'basic',
       account_manager_id: '11111111-1111-1111-1111-000000000004',
-      status: 'in_progress',
+      status: 'active',
     },
   ]);
 

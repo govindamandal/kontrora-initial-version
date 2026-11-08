@@ -41,13 +41,13 @@ async function PATCH(request, { params }) {
       userProfile,
       Permission.VIEW_ALL_TIME_ENTRIES,
       undefined,
-      admin,
+      supabase,
     );
     const canManageTime = await hasPermission(
       userProfile,
       Permission.MANAGE_TIME,
       undefined,
-      admin,
+      supabase,
     );
     if (!canViewAll || !canManageTime) {
       return NextResponse.json(
@@ -144,13 +144,13 @@ async function DELETE(
       userProfile,
       Permission.VIEW_ALL_TIME_ENTRIES,
       undefined,
-      admin,
+      supabase,
     );
     const canManageTime = await hasPermission(
       userProfile,
       Permission.MANAGE_TIME,
       undefined,
-      admin,
+      supabase,
     );
     if (!canViewAll || !canManageTime) {
       return NextResponse.json(

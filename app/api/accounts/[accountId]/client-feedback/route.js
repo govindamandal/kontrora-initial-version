@@ -62,7 +62,7 @@ async function GET(
     }
 
     // Verify user has access to this account
-    const hasAccess = await hasAccountAccessServer(supabase, user.id, accountId);
+    const hasAccess = await hasAccountAccessServer(admin, user.id, accountId);
     if (!hasAccess) {
       return NextResponse.json(
         {

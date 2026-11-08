@@ -1,11 +1,12 @@
+const { uuidSchema } = require('@/lib/validation-schemas');
 const { NextRequest, NextResponse } = require('next/server');
-const { getUserFromRequest, createAdminSupabaseClient } = require('@/lib/supabase-server');
+const { getUserFromRequest, createAdminSupabaseClient, createApiSupabaseClient } = require('@/lib/supabase-server');
 const { clientRejectProject } = require('@/lib/client-portal-service');
 const { z } = require('zod');
 const { validateRequestBody } = require('@/lib/validation-schemas');
 const { logger } = require('@/lib/debug-logger');
 const rejectProjectSchema = z.object({
-  workflow_instance_id: z.string().uuid('Invalid workflow instance ID'),
+  workflow_instance_id: uuidSchema,
   notes: z.string().max(2000, 'Notes too long'),
   issues: z.array(z.string()).optional(),
 });

@@ -26,13 +26,13 @@ async function POST(
 
     const {
       data: { user },
-    } = await admin.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user profile with roles
-    const { data: userProfile } = await admin
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select(
         `
@@ -60,11 +60,11 @@ async function POST(
       userProfile,
       Permission.MANAGE_ALL_PROJECTS,
       undefined,
-      admin,
+      supabase,
     );
 
     // Check if user has project access via assignment (before RLS-protected project query)
-    const { data: userAssignment } = await admin
+    const { data: userAssignment } = await supabase
       .from('project_assignments')
       .select('id')
       .eq('project_id', projectId)
@@ -75,7 +75,7 @@ async function POST(
     const hasProjectAssignment = !!userAssignment;
 
     // Fetch project first to check creator status (RLS allows access for creators)
-    const { data: project, error: projectError } = await admin
+    const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('id, status, account_id, created_by')
       .eq('id', projectId)
@@ -98,7 +98,7 @@ async function POST(
     }
 
     // Check if project has an active workflow - only allow manual completion for non-workflow projects
-    const { data: activeWorkflow } = await admin
+    const { data: activeWorkflow } = await supabase
       .from('workflow_instances')
       .select('id, status')
       .eq('project_id', projectId)
@@ -121,7 +121,7 @@ async function POST(
       userProfile,
       Permission.MANAGE_PROJECTS,
       undefined,
-      admin,
+      supabase,
     );
     const canCompleteAsAssignedPM = hasProjectAssignment && hasManageProjects;
 
@@ -143,7 +143,7 @@ async function POST(
     // Complete the project:
     // 1. Set status to 'complete'
     // 2. Update timestamp
-    const { error: updateError } = await admin
+    const { error: updateError } = await supabase
       .from('projects')
       .update({
         status: 'complete',
