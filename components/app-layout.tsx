@@ -34,10 +34,16 @@ export function AppLayout({ children }: AppLayoutProps) {
     setIsMounted(true);
   }, []);
 
-  // Redirect client users to login since client portal is removed
+  // Keep client users within their account-scoped portal.
   useEffect(() => {
-    if (!loading && userProfile && (userProfile as any).is_client) {
-      router.replace('/login');
+    if (
+      !loading &&
+      userProfile &&
+      (userProfile as any).is_client &&
+      pathname !== '/client-portal' &&
+      !pathname.startsWith('/client-portal/')
+    ) {
+      router.replace('/client-portal');
     }
   }, [loading, userProfile, pathname, router]);
 
