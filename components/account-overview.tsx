@@ -576,6 +576,7 @@ export function AccountOverview({
               <div className="space-y-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <h1 className="text-foreground text-4xl font-bold">{(account as any).name}</h1>
+                  <Link className="mt-3 inline-flex text-sm font-medium text-primary hover:underline" href={`/accounts/${account.id}/estimates`}>View estimates →</Link>
                   <Badge
                     variant={(account as any).status === 'active' ? 'default' : 'secondary'}
                     className="w-fit text-xs whitespace-nowrap"

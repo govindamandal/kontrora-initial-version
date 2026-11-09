@@ -7,6 +7,8 @@ export type { PermissionContext };
 
 // Define all system permissions (following hybrid approach: base + override + context)
 export enum Permission {
+  VIEW_FINANCIAL_DATA = 'view_financial_data',
+  MANAGE_ESTIMATES = 'manage_estimates',
   // ========================================
   // ROLE MANAGEMENT PERMISSIONS
   // ========================================
@@ -101,6 +103,12 @@ export const PermissionDefinitions: Record<
   Permission,
   { name: string; description: string; category: string; isOverride?: boolean }
 > = {
+  [Permission.VIEW_FINANCIAL_DATA]: {
+    name: 'View Financial Data', description: 'Read estimates within an explicitly granted finance account scope.', category: 'Finance',
+  },
+  [Permission.MANAGE_ESTIMATES]: {
+    name: 'Manage Estimates', description: 'Create drafts and record estimate decisions. Also requires an editor finance access grant.', category: 'Finance',
+  },
   // ========================================
   // ROLE MANAGEMENT PERMISSIONS
   // ========================================

@@ -123,3 +123,11 @@ initial-platform repairs and are not implemented by this change. Email delivery,
 external billing/escrow transactions, and exhaustive permission/security auditing
 are outside the automated smoke checks; configure and verify those integrations
 before using real customer data.
+
+## Estimates / proposal lifecycle assignment
+
+The revenue slice is implemented under **Accounts → View estimates**. It includes account-scoped drafts and line items, exact minor-unit amounts, optional project links, server filtering/pagination, retry-safe create, immutable sent content, accepted/rejected decisions, version conflicts, finance viewer/editor access, and retained history.
+
+Apply `supabase/migrations/20261109_estimates.sql` after the earlier migrations. No additional environment variables are needed. The migration bootstraps explicit finance grants for existing demo superadmins, Executive Directors and account managers. Other users remain denied; changing legacy permission flags alone does not grant finance access.
+
+See [Estimates architecture, security/tenancy, API, tests, and next steps](docs-estimates.md) for the required assignment handoff and demo instructions. Run `npm test` and `python3 scripts/test-estimates-postgres.py` for unit/API and real PostgreSQL transaction/RLS checks. Do not use real customer data with the role-select demo login.
