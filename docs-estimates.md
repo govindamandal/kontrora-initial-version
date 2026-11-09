@@ -3,7 +3,7 @@
 ## Run and showcase
 
 1. Configure the existing Supabase URL, publishable key and server-only service role key as described in README. Never commit .env.local.
-2. Apply the baseline/previous migrations, then **supabase/migrations/20261109_estimates.sql** once in Supabase SQL Editor. It adds the finance slice without replacing existing data.
+2. Apply the baseline/previous migrations, then **supabase/migrations/20261109_estimates.sql** once in Supabase SQL Editor. Also apply `20261110_estimate_conflict_response.sql` after it (safe for fresh installs too); it uses a non-retrying HTTP 409 conflict response and clears only stalled estimate test calls. It adds the finance slice without replacing existing data.
 3. Run `npm run dev`, sign in as SuperAdmin, open **Accounts → an account → View estimates**. Create a draft, add lines, save, mark as sent, then record acceptance or rejection. Executive Director is read-only; an account manager can edit only explicitly granted accounts. Client/designer accounts have no finance grant.
 4. Vercel uses the same Supabase database and the existing environment variables; no new environment variables are required.
 
@@ -44,7 +44,7 @@ Every list/get/create/update checks the URL account. RLS also protects headers, 
 - `GET /api/accounts/:accountId/estimates/:estimateId`: header, ordered lines and events.
 - `PATCH /api/accounts/:accountId/estimates/:estimateId`: `{version, content: {...}}` for draft edits OR `{version, status: "sent"|"accepted"|"rejected"}` for a lifecycle transition. A transition is separate from content editing.
 
-Create idempotency is scoped by caller and account. A transaction-scoped advisory lock and unique key serialize simultaneous retries. Same normalized content/key returns the same resource (201 initially; 200 with `Idempotency-Replayed: true` afterward); a changed payload using the same key returns 409. A replay returns the current representation of that resource, not an old snapshot. Keys are retained with the estimate and never reused. Draft edits use version-based conflict detection rather than create keys.
+Create idempotency is scoped by caller and account. A transaction-scoped advisory lock and unique key serialize simultaneous retries. Same normalized content/key returns the same resource (201 initially; 200 with `Idempotency-Replayed: true` afterward); a changed payload using the same key returns 409. A replay returns the current representation of that resource, not an old snapshot. Keys are retained with the estimate and never reused. Draft edits use version-based conflict detection rather than create keys. Stale versions raise `PT409`; do not substitute `40001`, which PostgREST retries as a serialization failure.
 
 ## Validation
 

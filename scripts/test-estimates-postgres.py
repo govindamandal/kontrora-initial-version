@@ -26,6 +26,7 @@ try:
  migration=Path('supabase/migrations/20261109_estimates.sql').read_text()
  for old,new in roles.items(): migration=re.sub(r'\b'+old+r'\b',new,migration)
  run(migration)
+ run(Path('supabase/migrations/20261110_estimate_conflict_response.sql').read_text())
  run(f"GRANT USAGE ON SCHEMA auth TO {roles['authenticated']}; GRANT ALL ON user_profiles,roles,user_roles,accounts TO {roles['authenticated']};")
  run("""DELETE FROM finance_access_grants;
  INSERT INTO finance_access_grants(user_id,account_id,finance_role) VALUES
@@ -72,7 +73,11 @@ try:
  assert as_user(f"SELECT count(*) FROM estimate_line_items WHERE estimate_id='{eid}' AND archived_at IS NULL;")=='1'
  assert as_user(f"SELECT count(*) FROM estimate_line_items WHERE estimate_id='{eid}' AND archived_at IS NOT NULL;")=='1'
  denied(transition('accepted',2),'Invalid lifecycle transition')
- denied(transition('sent',99),'reload')
+ try: as_user(transition('sent',99))
+ except RuntimeError as err: assert 'reload' in str(err)
+ else: raise AssertionError('Expected stale-version conflict')
+ # Assert a terminal HTTP 409 code rather than the auto-retried 40001.
+ run("SELECT set_config('request.jwt.claim.sub','11111111-1111-1111-1111-000000000001',false); DO $$ BEGIN BEGIN PERFORM kontrora_save_estimate('aaaaaaaa-aaaa-aaaa-aaaa-000000000001','{\"status\":\"sent\"}',NULL,'"+eid+"',99); EXCEPTION WHEN SQLSTATE 'PT409' THEN RETURN; END; RAISE EXCEPTION 'Expected PT409'; END $$;")
  as_user(transition('sent',2))
  denied(f"SELECT kontrora_save_estimate('aaaaaaaa-aaaa-aaaa-aaaa-000000000001','{payload}',NULL,'{eid}',3);",'Only draft')
  # Two concurrent terminal decisions: one succeeds and one sees a stale version.

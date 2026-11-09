@@ -109,7 +109,7 @@ BEGIN
  ELSE
   SELECT * INTO e FROM public.estimates WHERE id=p_id AND account_id=p_account FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Estimate not found' USING ERRCODE='P0002'; END IF;
-  IF p_version IS NULL OR e.version<>p_version THEN RAISE EXCEPTION 'Estimate changed; reload before saving' USING ERRCODE='40001'; END IF;
+  IF p_version IS NULL OR e.version<>p_version THEN RAISE EXCEPTION 'Estimate changed; reload before saving' USING ERRCODE='PT409'; END IF;
  END IF;
  target:=coalesce(p_payload->>'status',CASE WHEN p_id IS NULL THEN 'draft' ELSE e.status END);
  IF p_id IS NOT NULL AND target<>e.status THEN

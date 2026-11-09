@@ -135,7 +135,7 @@ describe('estimate routes', () => {
   it('returns conflict on reused keys or concurrent edits', async () => {
     state.saveError = { code: '23505', message: 'Different content' };
     expect((await POST(request(draft), ctx)).status).toBe(409);
-    state.saveError = { code: '40001', message: 'Reload' };
+    state.saveError = { code: 'PT409', message: 'Reload' };
     expect((await PATCH(request({ version: 1, status: 'sent' }, '', 'PATCH'), ctx)).status).toBe(
       409,
     );
