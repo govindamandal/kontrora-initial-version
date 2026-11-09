@@ -62,12 +62,13 @@ CREATE TABLE public.estimate_line_items (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  estimate_id uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
  position integer NOT NULL CHECK(position BETWEEN 0 AND 49),
+ archived_at timestamptz,
  description text NOT NULL CHECK(length(btrim(description)) BETWEEN 1 AND 300),
  quantity integer NOT NULL CHECK(quantity BETWEEN 1 AND 10000),
  unit_price_minor bigint NOT NULL CHECK(unit_price_minor BETWEEN 0 AND 1000000000),
- line_total_minor bigint GENERATED ALWAYS AS (quantity::bigint*unit_price_minor) STORED,
- UNIQUE(estimate_id,position)
+ line_total_minor bigint GENERATED ALWAYS AS (quantity::bigint*unit_price_minor) STORED
 );
+CREATE UNIQUE INDEX estimate_items_current_position ON public.estimate_line_items(estimate_id,position) WHERE archived_at IS NULL;
 CREATE TABLE public.estimate_events (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), estimate_id uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
  actor_id uuid NOT NULL REFERENCES public.user_profiles(id) ON DELETE RESTRICT,
@@ -87,6 +88,7 @@ CREATE FUNCTION public.kontrora_estimate_no_delete() RETURNS trigger LANGUAGE pl
 BEGIN RAISE EXCEPTION 'Estimates cannot be deleted' USING ERRCODE='23514'; END;
 $$;
 CREATE TRIGGER estimates_no_delete BEFORE DELETE ON public.estimates FOR EACH ROW EXECUTE FUNCTION public.kontrora_estimate_no_delete();
+CREATE TRIGGER estimate_items_no_delete BEFORE DELETE ON public.estimate_line_items FOR EACH ROW EXECUTE FUNCTION public.kontrora_estimate_no_delete();
 CREATE TRIGGER estimate_events_no_delete BEFORE DELETE ON public.estimate_events FOR EACH ROW EXECUTE FUNCTION public.kontrora_estimate_no_delete();
 
 CREATE FUNCTION public.kontrora_save_estimate(p_account uuid,p_payload jsonb,p_key text DEFAULT NULL,p_id uuid DEFAULT NULL,p_version integer DEFAULT NULL)
@@ -97,7 +99,7 @@ BEGIN
  IF jsonb_typeof(p_payload) IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'Invalid estimate' USING ERRCODE='22023'; END IF;
  IF p_id IS NULL THEN
   IF p_key IS NULL OR length(p_key) NOT BETWEEN 8 AND 128 THEN RAISE EXCEPTION 'Idempotency-Key must contain 8–128 characters' USING ERRCODE='22023'; END IF;
-  fingerprint:=md5(p_payload::text);
+  fingerprint:=encode(sha256(convert_to(p_payload::text,'UTF8')),'hex');
   PERFORM pg_advisory_xact_lock(hashtextextended(p_account::text || auth.uid()::text || p_key,0));
   SELECT * INTO e FROM public.estimates WHERE account_id=p_account AND created_by=auth.uid() AND idempotency_key=p_key;
   IF FOUND THEN
@@ -115,7 +117,7 @@ BEGIN
    RAISE EXCEPTION 'Invalid lifecycle transition' USING ERRCODE='22023';
   END IF;
   IF (p_payload - 'status')<>'{}'::jsonb THEN RAISE EXCEPTION 'Send a transition separately from content changes' USING ERRCODE='22023'; END IF;
-  IF target='sent' AND (e.total_minor<=0 OR NOT EXISTS(SELECT 1 FROM public.estimate_line_items WHERE estimate_id=e.id)) THEN
+  IF target='sent' AND (e.total_minor<=0 OR NOT EXISTS(SELECT 1 FROM public.estimate_line_items WHERE estimate_id=e.id AND archived_at IS NULL)) THEN
    RAISE EXCEPTION 'Add a positive estimate total before sending' USING ERRCODE='22023'; END IF;
   UPDATE public.estimates SET status=target,version=version+1,updated_at=now(),sent_at=CASE WHEN target='sent' THEN now() ELSE sent_at END,
    decided_at=CASE WHEN target IN ('accepted','rejected') THEN now() ELSE NULL END WHERE id=e.id RETURNING * INTO e;
@@ -145,7 +147,7 @@ BEGIN
   VALUES(p_account,project,btrim(p_payload->>'title'),p_payload->>'currency',coalesce(p_payload->>'notes',''),total,auth.uid(),p_key,fingerprint) RETURNING * INTO e;
  ELSE
   UPDATE public.estimates SET project_id=project,title=btrim(p_payload->>'title'),currency=p_payload->>'currency',notes=coalesce(p_payload->>'notes',''),total_minor=total,version=version+1,updated_at=now() WHERE id=e.id RETURNING * INTO e;
-  DELETE FROM public.estimate_line_items WHERE estimate_id=e.id;
+  UPDATE public.estimate_line_items SET archived_at=now() WHERE estimate_id=e.id AND archived_at IS NULL;
  END IF;
  FOR item IN SELECT * FROM jsonb_array_elements(p_payload->'items') LOOP
   INSERT INTO public.estimate_line_items(estimate_id,position,description,quantity,unit_price_minor)

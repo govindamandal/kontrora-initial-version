@@ -69,7 +69,8 @@ try:
  # Draft editing replaces line items atomically and appends a versioned event.
  as_user(f"SELECT kontrora_save_estimate('aaaaaaaa-aaaa-aaaa-aaaa-000000000001','{payload.replace('Integration estimate','Updated scope')}',NULL,'{eid}',1);")
  assert as_user(f"SELECT title FROM estimates WHERE id='{eid}';")=='Updated scope'
- assert as_user(f"SELECT count(*) FROM estimate_line_items WHERE estimate_id='{eid}';")=='1'
+ assert as_user(f"SELECT count(*) FROM estimate_line_items WHERE estimate_id='{eid}' AND archived_at IS NULL;")=='1'
+ assert as_user(f"SELECT count(*) FROM estimate_line_items WHERE estimate_id='{eid}' AND archived_at IS NOT NULL;")=='1'
  denied(transition('accepted',2),'Invalid lifecycle transition')
  denied(transition('sent',99),'reload')
  as_user(transition('sent',2))

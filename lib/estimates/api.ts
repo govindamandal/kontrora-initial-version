@@ -33,11 +33,15 @@ export async function readEstimate(
   const { data, error } = await db
     .from('estimates')
     .select(`${estimateColumns},estimate_line_items(*),estimate_events(*)`)
+    .is('estimate_line_items.archived_at', null)
     .eq('account_id', accountId)
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new EstimateError('Estimate not found', 404);
+  data.estimate_line_items = data.estimate_line_items.filter(
+    (item: { archived_at: string | null }) => item.archived_at === null,
+  );
   data.estimate_line_items.sort(
     (a: { position: number }, b: { position: number }) => a.position - b.position,
   );
