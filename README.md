@@ -118,8 +118,8 @@ Run `npm test`, `npm run lint`, `npm run build`, and optionally
 `python3 scripts/test-workflow-postgres.py` (requires local PostgreSQL admin access;
 it creates and removes an isolated temporary test database).
 
-The Estimates assessment and Q3–Q4 roadmap features are separate from these
-initial-platform repairs and are not implemented by this change. Email delivery,
+The Estimates assessment is implemented in the revenue slice described below.
+The broader CRM, billing and collaboration analytics work is described in [the Q3–Q4 roadmap](ROADMAP.md). Email delivery,
 external billing/escrow transactions, and exhaustive permission/security auditing
 are outside the automated smoke checks; configure and verify those integrations
 before using real customer data.
