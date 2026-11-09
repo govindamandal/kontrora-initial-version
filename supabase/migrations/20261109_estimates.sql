@@ -38,10 +38,11 @@ INSERT INTO public.finance_access_grants(user_id,account_id,finance_role)
 UPDATE public.roles SET permissions=permissions || '{"view_financial_data":true}'::jsonb WHERE name='Executive Director';
 UPDATE public.roles SET permissions=permissions || '{"view_financial_data":true,"manage_estimates":true}'::jsonb WHERE name='Account Manager';
 
+CREATE UNIQUE INDEX projects_estimates_account_key ON public.projects(id,account_id);
 CREATE TABLE public.estimates (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  account_id uuid NOT NULL REFERENCES public.accounts(id) ON DELETE RESTRICT,
- project_id uuid REFERENCES public.projects(id) ON DELETE RESTRICT,
+ project_id uuid,
  title text NOT NULL CHECK(length(btrim(title)) BETWEEN 1 AND 160),
  currency text NOT NULL CHECK(currency IN ('USD','EUR','GBP','INR','CAD','AUD')),
  status text NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','sent','accepted','rejected')),
@@ -53,7 +54,8 @@ CREATE TABLE public.estimates (
  sent_at timestamptz, decided_at timestamptz,
  idempotency_key text NOT NULL CHECK(length(idempotency_key) BETWEEN 8 AND 128),
  request_fingerprint text NOT NULL,
- UNIQUE(account_id,created_by,idempotency_key)
+ UNIQUE(account_id,created_by,idempotency_key),
+ FOREIGN KEY(project_id,account_id) REFERENCES public.projects(id,account_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 CREATE INDEX estimates_account_status_created ON public.estimates(account_id,status,created_at DESC,id);
 CREATE TABLE public.estimate_line_items (

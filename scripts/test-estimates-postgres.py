@@ -38,6 +38,9 @@ try:
  results=[json.loads(s) for s in concurrent]
  assert len({s['id'] for s in results})==1 and sorted(s['replayed'] for s in results)==[False,True],results
  eid=results[0]['id']
+ try: run("UPDATE projects SET account_id='aaaaaaaa-aaaa-aaaa-aaaa-000000000002' WHERE id='ffffffff-0001-0002-0003-000000000001';")
+ except RuntimeError as e: assert 'foreign key constraint' in str(e)
+ else: raise AssertionError('Linked project moved across accounts')
  assert as_user(f"SELECT total_minor FROM estimates WHERE id='{eid}';")=='5997'
  def denied(sql,message=None,user='11111111-1111-1111-1111-000000000001'):
   try: as_user(sql,user)
